@@ -1,17 +1,41 @@
 # Library and utility for diffing RouterOS files
 
+[![PyPI license](https://img.shields.io/pypi/l/ansicolortags.svg)](https://pypi.python.org/pypi/ansicolortags/)
+[![PyPI pyversions](https://img.shields.io/pypi/pyversions/ansicolortags.svg)](https://pypi.python.org/pypi/ansicolortags/)
+
 ## Prettify
 
-This will parse an existing configuration and re-print it in a standard format with 
-common sections collapsed:
+The `routeros_prettify` (alias `ros_prettify`) command will parse an existing configuration and re-print it in a 
+standard format with common sections collapsed:
 
-TBA
+```
+routeros_prettify old_config.rsc new_config.rsc
+```
+
+Or using Python:
+
+```python
+from routeros_diff.parser import RouterOSConfig
+config = RouterOSConfig.parse(config_string)
+print(config)
+```
 
 ## Diff
 
-This will take two RouterOS files and diff them:
+The `routeros_diff` (alias `ros_diff`) command will take two RouterOS files and diff them:
 
-TBA
+```
+routeros_diff old_config.rsc new_config.rsc
+```
+
+Or using Python:
+
+```python
+from routeros_diff.parser import RouterOSConfig
+old = RouterOSConfig.parse(old_config_string)
+new = RouterOSConfig.parse(new_config_string)
+print(old.diff(new))
+```
 
 ### Diffing features
 

@@ -7,7 +7,7 @@ repository = "https://github.com/gardunha/routeros-diff"
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.6"
 python-dateutil = "^2.8.1"
 
 [tool.poetry.dev-dependencies]
@@ -24,3 +24,9 @@ build-backend = "poetry.core.masonry.api"
     from = {format = "poetry", path = "pyproject.toml"}
     envs = ["main"]
     to = {format = "setuppy", path = "setup.py"}
+
+[tool.poetry.scripts]
+routeros_diff = 'routeros_diff.commands.diff:run'
+ros_diff = 'routeros_diff.commands.diff:run'
+routeros_prettify = 'routeros_diff.commands.prettify:run'
+ros_prettify = 'routeros_diff.commands.prettify:run'
