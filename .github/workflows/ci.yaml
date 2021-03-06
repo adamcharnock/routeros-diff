@@ -11,7 +11,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v2.2.1
       with:
-        python-version: ['3.6', '3.7', '3.8', '3.9']
+        python-version: '3.8'
     - name: Install Poetry
       uses: dschep/install-poetry-action@v1.3
       with:
