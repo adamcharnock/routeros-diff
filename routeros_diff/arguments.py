@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Union, List, TYPE_CHECKING
 
+from routeros_diff.settings import Settings
 from routeros_diff.utilities import quote
 from routeros_diff.exceptions import CannotDiff
 
@@ -97,17 +98,20 @@ class Arg:
     # Common comparators are = or ~
     comparator: str = "="
 
+    settings: Settings = None
+
     def __init__(
         self,
         key: str,
         value: Union[str, "Expression", AbstractArgValue, None] = None,
         comparator: str = "=",
+        settings: Settings = None,
     ):
         from routeros_diff.expressions import Expression
 
         self.key = key
-
         self.comparator = comparator
+        self.settings = settings or Settings()
 
         # Normalise our value into some kind of AbstractArgValue
         if isinstance(value, str):

@@ -101,7 +101,7 @@ add name=core router-id=100.127.0.1
 ```
 
 Here the natural key is `name` and the natural ID is `core`. The parser assumes `name` will be the natural key,
-but is configured to use other keys in some situations (see `NATURAL_KEYS`).
+but is configured to use other keys in some situations.
 
 Additionally, you can choose to manually add your own IDs to expressions. This is done using comments.
 For example:
@@ -168,6 +168,53 @@ config = RouterOSConfig.parse(config_string)
 print(config)
 ```
 
+## Settings
+
+You can customise settings in one of two ways.
+
+The simplest way is to pass settings to RouterOSConfig.parse():
+
+```python
+RouterOSConfig.parse(s=my_config, settings=dict(
+    # Natural keys for each section name.
+    # 'name' will be used if none is found below
+    # (and only if the 'name' value is available)
+    natural_keys={
+        "/ip address": "address", 
+        ...
+    },
+    
+    # Don't perform deletions in these sections
+    no_deletions={
+        "/interface ethernet", 
+        ...
+    },
+    
+    # Don't perform creations in these sections
+    no_creations={
+        "/interface ethernet",
+        ...
+    },
+    
+    # Ordering is important in these sections. Ensure 
+    # entities maintain their order. Natural keys/ids must be 
+    # present in sections listed here
+    expression_order_important={
+        "/ip firewall*", 
+        ...
+    },
+))
+```
+
+Note that section paths can be specified using '*' wildcards.
+For example, `/ip firewall*`.
+
+Alternatively, you can extend this class and override its methods. 
+This allows you to implement more complex logic should you require.
+In this case, you can pass your customised class to the parser as follows:
+
+    RouterOSConfig.parse(my_config, settings=MyCustomSettings())
+
 ## Concepts
 
 This is a **section** with a path of `/ip address` and two expressions:
@@ -184,7 +231,7 @@ This is an **expression** with a command of **add**, and a key-value argument of
 add address=1.2.3.4
 ```
 
-# Release process:
+## Release process:
 
 ```bash
 export VERSION=a.b.c

@@ -3,6 +3,7 @@ from dataclasses import dataclass, replace
 from typing import List, Optional
 
 from routeros_diff.arguments import Arg, ArgList
+from routeros_diff.settings import Settings
 from routeros_diff.expressions import Expression
 from routeros_diff.utilities import find_expression
 from routeros_diff.exceptions import CannotDiff
@@ -22,6 +23,8 @@ class Section:
     path: str
     expressions: List[Expression]
 
+    settings: Settings = None
+
     def __str__(self):
         """Convert this parsed expression into a valid RouterOS configuration"""
         s = f"{self.path}\n"
@@ -29,8 +32,8 @@ class Section:
             s += f"{expression}\n"
         return s
 
-    @staticmethod
-    def parse(s: str):
+    @classmethod
+    def parse(cls, s: str, settings: Settings = None):
         """
         Parse an input string into a Section instance
 
@@ -40,6 +43,7 @@ class Section:
             add area=core network=10.100.0.0/24
             add area=towers network=100.126.0.0/29
         """
+        settings = settings or Settings()
         s = s.strip()
         assert s.startswith("/"), "Was not passed a section block"
 
@@ -60,8 +64,8 @@ class Section:
         for l in lines[1:]:
             assert not l.startswith('/'), f"Expression must not start with a '/'. It was: {path}"
 
-        expressions = [Expression.parse(l, section_path=path) for l in lines[1:]]
-        return Section(path=path, expressions=[e for e in expressions if e])
+        expressions = [Expression.parse(l, section_path=path, settings=settings) for l in lines[1:]]
+        return cls(path=path, expressions=[e for e in expressions if e], settings=settings)
 
     @property
     def uses_natural_ids(self):
@@ -94,20 +98,11 @@ class Section:
             i.is_single_object_expression for i in self.expressions
         )
 
-    @property
-    def expression_order_is_important(self):
-        """Is expression order important in this section?
-
-        Note: Probably other cases here. Catch them as they come up
-        """
-        return self.path.startswith("/ip firewall")
-
     def expression_index_for_natural_key(self, natural_key, natural_id):
         """Get the position of the expression identified by the given natural key & id"""
         for i, expression in enumerate(self.expressions):
             if expression.natural_key_and_id == (natural_key, natural_id):
                 return i
-
         raise KeyError()
 
     def diff(self, old: "Section") -> "Section":
@@ -138,7 +133,7 @@ class Section:
                 # makes no mention of it. We cannot delete default entries,
                 # so just ignore it. We ignore it by removing it and starting
                 # the diff process again
-                diff = self.diff(Section(old.path, []))
+                diff = self.diff(Section(old.path, [], settings=self.settings))
             else:
                 raise CannotDiff(
                     "Cannot handle section which contain a mix of default setting and non-default setting"
@@ -153,7 +148,7 @@ class Section:
             diff = self._diff_by_value(old)
 
         # Handle ordering if we need to
-        if self.expression_order_is_important and diff.expressions:
+        if self.settings.is_expression_order_important(self.path) and diff.expressions:
             # Order is important here, and we have changes
             if self.uses_natural_ids and old.uses_natural_ids:
                 # We can ID each record, so apply the correct ordering
@@ -177,7 +172,7 @@ class Section:
                 wipe_expression = Expression(
                     section_path=self.path,
                     command="remove",
-                    find_expression=Expression("", "find", None, ArgList()),
+                    find_expression=Expression("", "find", None, ArgList(), settings=self.settings),
                     args=ArgList(),
                 )
                 diff = replace(self, expressions=[wipe_expression] + self.expressions)
@@ -214,11 +209,16 @@ class Section:
             )
 
         args_diff = self.expressions[0].args.diff(old.expressions[0].args)
+
+        if args_diff:
+            expressions = [replace(self.expressions[0], args=args_diff)]
+        else:
+            expressions = []
+
         return Section(
             path=self.path,
-            expressions=[replace(self.expressions[0], args=args_diff)]
-            if args_diff
-            else [],
+            expressions=expressions,
+            settings=self.settings,
         )
 
     def _diff_by_id(self, old: "Section") -> "Section":
@@ -259,7 +259,7 @@ class Section:
 
         # Note we remove first, as this avoids issue with value conflicts
         expressions = remove + modify + create
-        return Section(path=self.path, expressions=[e for e in expressions if e])
+        return Section(path=self.path, expressions=[e for e in expressions if e], settings=self.settings)
 
     def _diff_by_value(self, old: "Section") -> "Section":
         """Diff based on the values of expressions
@@ -286,7 +286,7 @@ class Section:
                 create.append(new_expression.as_create())
 
         expressions = remove + create
-        return Section(path=self.path, expressions=[e for e in expressions if e])
+        return Section(path=self.path, expressions=[e for e in expressions if e], settings=self.settings)
 
     @property
     def natural_ids(self) -> List[str]:

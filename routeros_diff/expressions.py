@@ -5,8 +5,8 @@ from ipaddress import ip_address
 from typing import Optional, List, Tuple
 
 from routeros_diff.arguments import ArgList, Arg
-from routeros_diff.constants import NO_DELETIONS, NO_CREATIONS
-from routeros_diff.utilities import find_expression, get_natural_key
+from routeros_diff.settings import Settings
+from routeros_diff.utilities import find_expression
 from routeros_diff.exceptions import CannotDiff
 
 
@@ -34,6 +34,8 @@ class Expression:
     # The list of args in this expression
     args: ArgList
 
+    settings: Settings = None
+
     def __post_init__(self):
         assert "=" not in self.command, (
             f"Not a valid command: {self.command}. "
@@ -50,13 +52,14 @@ class Expression:
         return " ".join([x for x in (self.command, find_expression_, str(self.args)) if x])
 
     @staticmethod
-    def parse(s: str, section_path: str):
+    def parse(s: str, section_path: str, settings: Settings=None):
         """Return an Expression object for the given string
 
         Example:
 
             Expression.parse("add area=core network=100.127.0.0/24", "/routing ospf area")
         """
+        settings = settings or Settings()
 
         # Sanity check
         assert s.count("[") <= 1, f"Too many sub-expressions, cannot parse: {s}"
@@ -85,6 +88,7 @@ class Expression:
             find_expression=find_expression_,
             args=ArgList(args),
             section_path=section_path,
+            settings=settings,
         )
 
     def diff(self, old: "Expression") -> List["Expression"]:
@@ -137,6 +141,7 @@ class Expression:
                     command="set",
                     args=diffed_args,
                     find_expression=None,
+                    settings=self.settings,
                 )
             ]
         else:
@@ -146,6 +151,7 @@ class Expression:
                     command="set",
                     args=diffed_args,
                     find_expression=find_expression(new_natural_key, new_natural_id),
+                    settings=self.settings,
                 )
             ]
 
@@ -164,7 +170,7 @@ class Expression:
                     # Use the special key 'comment-id'
                     return "comment-id", matches.group(1)
 
-            natural_key = get_natural_key(self.section_path)
+            natural_key = self.settings.get_natural_key(self.section_path)
             # ID is in args
             try:
                 return natural_key, self.args[natural_key]
@@ -206,7 +212,7 @@ class Expression:
 
     def as_delete(self):
         """Return this expression as a deletion"""
-        if self.section_path in NO_DELETIONS:
+        if not self.settings.deletion_allowed(self.section_path):
             # We cannot delete this entity (eg it is a physical interface)
             return None
 
@@ -219,6 +225,7 @@ class Expression:
                     command="remove",
                     find_expression=find_expression(natural_key, natural_id),
                     args=ArgList(),
+                    settings=self.settings,
                 )
             else:
                 # Find by positional name: "remove value"
@@ -232,6 +239,7 @@ class Expression:
                     command="remove",
                     find_expression=None,
                     args=ArgList([Arg(natural_id, None)]),
+                    settings=self.settings,
                 )
 
         if natural_key:
@@ -246,10 +254,11 @@ class Expression:
                 section_path="", command="find", find_expression=None, args=self.args,
             ),
             args=ArgList(),
+            settings=self.settings,
         )
 
     def as_create(self):
-        if self.section_path in NO_CREATIONS:
+        if not self.settings.creation_allowed(self.section_path):
             # Is probably a physical interface
             return None
 
@@ -265,6 +274,7 @@ class Expression:
             command=command,
             find_expression=None,
             args=self.args,
+            settings=self.settings,
         )
 
     @property

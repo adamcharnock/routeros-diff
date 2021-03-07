@@ -2,10 +2,11 @@ import re
 from copy import copy
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List, Tuple, Optional, Dict
+from typing import List, Tuple, Optional, Dict, Union
 
 import dateutil.parser
 
+from routeros_diff.settings import Settings
 from routeros_diff.exceptions import CannotDiff
 from routeros_diff.sections import Section
 
@@ -27,12 +28,18 @@ class RouterOSConfig:
     # All sections parsed from the config file
     sections: List[Section]
 
+    settings: Settings = None
+
     def __str__(self):
         return "\n".join(str(s) for s in self.sections if s.expressions)
 
-    @staticmethod
-    def parse(s: str):
+    @classmethod
+    def parse(cls, s: str, settings: Union[Settings, dict] = None):
         """Takes an entire RouterOS configuration blob"""
+        settings = settings or Settings()
+        if isinstance(settings, dict):
+            settings = Settings(**settings)
+
         # Normalise new lines
         s = s.strip().replace("\r\n", "\n")
 
@@ -58,7 +65,7 @@ class RouterOSConfig:
         parsed_sections: Dict[str, Section] = {}
         for section in sections:
             # Parse the section
-            parsed_section = Section.parse(section)
+            parsed_section = Section.parse(section, settings=settings)
             if parsed_section.path not in parsed_sections:
                 # Not seen this section, so store it as normal
                 parsed_sections[parsed_section.path] = parsed_section
@@ -68,10 +75,11 @@ class RouterOSConfig:
                     parsed_section.expressions
                 )
 
-        return RouterOSConfig(
+        return cls(
             timestamp=timestamp,
             router_os_version=router_os_version,
             sections=list(parsed_sections.values()),
+            settings=settings,
         )
 
     def keys(self):
@@ -119,13 +127,13 @@ class RouterOSConfig:
                 new_section = self[section_path]
             else:
                 # Section not found in new config, so just create a dummy empty section
-                new_section = Section(path=section_path, expressions=[])
+                new_section = Section(path=section_path, expressions=[], settings=self.settings)
 
             if section_path in old_sections:
                 old_section = old[section_path]
             else:
                 # Section not found in old config, so just create a dummy empty section
-                old_section = Section(path=section_path, expressions=[])
+                old_section = Section(path=section_path, expressions=[], settings=self.settings)
 
             diffed_sections.append(new_section.diff(old_section))
 
