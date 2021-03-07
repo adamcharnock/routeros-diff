@@ -188,6 +188,8 @@ add address=1.2.3.4
 
 ```bash
 export VERSION=a.b.c
+
+poetry version $VERSION
 dephell convert
 black setup.py
 
