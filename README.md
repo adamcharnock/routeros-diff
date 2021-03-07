@@ -1,7 +1,7 @@
 # Create configuration patches for your Mikrotik routers
 
-[![PyPI license](https://img.shields.io/pypi/l/ansicolortags.svg)](https://pypi.python.org/pypi/ansicolortags/)
-[![PyPI pyversions](https://img.shields.io/pypi/pyversions/ansicolortags.svg)](https://pypi.python.org/pypi/ansicolortags/)
+[![PyPI license](https://img.shields.io/pypi/l/routeros-diff.svg)](https://pypi.python.org/pypi/routeros-diff/)
+[![PyPI pyversions](https://img.shields.io/pypi/pyversions/routeros-diff.svg)](https://pypi.python.org/pypi/routeros-diff/)
 [![Tests](https://github.com/gardunha/routeros-diff/actions/workflows/ci.yaml/badge.svg)](https://github.com/gardunha/routeros-diff/actions/workflows/ci.yaml)
 
 ## Installation
