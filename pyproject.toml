@@ -5,6 +5,7 @@ version = "0.1.0"
 authors = ["Adam Charnock <adam.charnock@gardunha.net>"]
 repository = "https://github.com/gardunha/routeros-diff"
 license = "MIT"
+readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.6"
