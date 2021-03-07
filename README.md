@@ -1,25 +1,9 @@
-# Library and utility for diffing RouterOS files
+# Diff and prettify RouterOS files
 
 [![PyPI license](https://img.shields.io/pypi/l/ansicolortags.svg)](https://pypi.python.org/pypi/ansicolortags/)
 [![PyPI pyversions](https://img.shields.io/pypi/pyversions/ansicolortags.svg)](https://pypi.python.org/pypi/ansicolortags/)
 [![Tests](https://github.com/gardunha/routeros-diff/actions/workflows/ci.yaml/badge.svg)](https://github.com/gardunha/routeros-diff/actions/workflows/ci.yaml)
 
-## Prettify
-
-The `routeros_prettify` (alias `ros_prettify`) command will parse an existing configuration and re-print it in a
-standard format with common sections collapsed:
-
-```
-routeros_prettify old_config.rsc new_config.rsc
-```
-
-Or using Python:
-
-```python
-from routeros_diff.parser import RouterOSConfig
-config = RouterOSConfig.parse(config_string)
-print(config)
-```
 
 ## Diff
 
@@ -39,7 +23,7 @@ print(old.diff(new))
 ### Diffing features
 
 * IDs in comments (i.e. `comment="Block outgoing SMTP [ ID:block-smtp ]"`). IDs in comments allow
-  for diffing of expressions which have no natural IDs (a good example of this is firewall rules).
+for diffing of expressions which have no natural IDs (a good example of this is firewall rules).
 * Maintaining of order where ordering is important (again, in firewall rules)
 
 ### Limitations
@@ -47,14 +31,14 @@ print(old.diff(new))
 This aim is for this diffing process to work well within a limited range of conditions.
 The configuration format is an entire scripting language in itself, and so this library
 cannot sensibly hope to parse any arbitrary input. As a rule of thumb, this library should
-be able to diff anything produced by `/export`
+be able to diff anything produced by `/export`.
 
 ### Sections and expressions
 
 The following is NOT supported:
 
-## NOT SUPPORTED, DONT DO THIS ##
-/routing ospf instance add name=core router-id=100.127.0.1
+    ## NOT SUPPORTED, DONT DO THIS ##
+    /routing ospf instance add name=core router-id=100.127.0.1
 
 Rather, this must be formatted as separate 'sections' and 'expressions'. For example:
 
@@ -73,20 +57,20 @@ The parser refers to these unique identities as naturals keys & natural IDs. For
 
     add name=core router-id=100.127.0.1
 
-Here the natural key is `name` and the natural ID is `core`. The parser assumes `name` will be the natural key, 
+Here the natural key is `name` and the natural ID is `core`. The parser assumes `name` will be the natural key,
 but is configured to use other keys in some situations (see `NATURAL_KEYS`).
 
-Additionally, you can choose to manually add your own IDs to expressions. This is done using comments. 
+Additionally, you can choose to manually add your own IDs to expressions. This is done using comments.
 For example:
 
     add chain=a comment="[ ID:1 ]"
 
-These comment-based IDs take priority over whatever the parser may have otherwise used. 
-If using comment IDs, you should make sure you set them for all expressions in 
+These comment-based IDs take priority over whatever the parser may have otherwise used.
+If using comment IDs, you should make sure you set them for all expressions in
 that section.
 
-This is especially useful for firewall rules. The order of firewall rules is important, and they have no 
-obvious natural keys/IDs. Using comments IDs for your firewall rules allows the parser to 
+This is especially useful for firewall rules. The order of firewall rules is important, and they have no
+obvious natural keys/IDs. Using comments IDs for your firewall rules allows the parser to
 intelligently maintain order. For example:
 
 ```
@@ -108,7 +92,7 @@ add chain=b comment="[ ID:2 ]" place-before=[ find where comment~ID:3 ]
 
 Note that the parser uses `place-before` to correctly place the new firewall rule.
 
-*Without using comment IDs, the parse would have to drop and recreate all firewall rules.* This would 
+*Without using comment IDs, the parse would have to drop and recreate all firewall rules.* This would
 be non-ideal for reasons of both security and reliability.
 
 ### Reporting errors
@@ -121,6 +105,23 @@ Seeing something strange in your diff output? Please report the error with the f
 
 Please minimise the size of this data as much as possible. The smaller and more specific the example of the problem,
 the easier it will be for us to find a resolution.
+
+## Prettify
+
+The `routeros_prettify` (alias `ros_prettify`) command will parse an existing configuration and re-print it in a
+standard format with common sections collapsed:
+
+```
+routeros_prettify old_config.rsc new_config.rsc
+```
+
+Or using Python:
+
+```python
+from routeros_diff.parser import RouterOSConfig
+config = RouterOSConfig.parse(config_string)
+print(config)
+```
 
 ## Examples:
 
@@ -158,6 +159,18 @@ add chain=c comment="[ ID:3 ]"
 /ip firewall nat 
 add chain=b comment="[ ID:2 ]" place-before=[ find where comment~ID:3 ]
 ```
+
+## Concepts
+
+This is a **section** with a path of `/ip address` and two expressions:
+
+    /ip address
+    add address=1.2.3.4
+    add address=5.6.7.8
+
+This is an **expression** with a command of **add**, and a key-value argument of `address=1.2.3.4`:
+
+    add address=1.2.3.4
 
 # Release process:
 
