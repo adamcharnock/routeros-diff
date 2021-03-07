@@ -79,7 +79,7 @@ The following is NOT supported:
 /routing ospf instance add name=core router-id=100.127.0.1
 ```
 
-Rather, this must be formatted as separate 'sections' and 'expressions'. For example:
+Rather, this must be formatted as separate 'sections' and 'expressions' on different lines. For example:
 
 ```r
 /routing ospf instance 
