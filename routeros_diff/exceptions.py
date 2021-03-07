@@ -1,0 +1,2 @@
+class CannotDiff(Exception):
+    pass

@@ -3,6 +3,10 @@ from pathlib import Path
 
 import pytest
 
+import routeros_diff.exceptions
+import routeros_diff.expressions
+import routeros_diff.sections
+import routeros_diff.utilities
 from routeros_diff import parser
 
 
@@ -10,7 +14,7 @@ from routeros_diff import parser
 
 
 def test_section():
-    section = parser.Section.parse(OSPF_SECTION)
+    section = routeros_diff.sections.Section.parse(OSPF_SECTION)
     assert section.path == "/routing ospf network"
 
     expression1 = section.expressions[0]
@@ -79,7 +83,7 @@ def test_line_continuation_before_blank_line():
 
 def test_find():
     find = "set [ find default-name=ether3 ] name=ether3-bp-backup"
-    expression = parser.Expression.parse(find, "/interface ethernet")
+    expression = routeros_diff.expressions.Expression.parse(find, "/interface ethernet")
 
     assert expression.command == "set"
     assert expression.find_expression.command == "find"
@@ -90,17 +94,17 @@ def test_find():
 
 def test_positional():
     find = "set 0 foo=bar"
-    expression = parser.Expression.parse(find, "/interface ethernet")
+    expression = routeros_diff.expressions.Expression.parse(find, "/interface ethernet")
     assert str(expression) == "set 0 foo=bar"
 
 
 
 def test_diff_expression_modified():
-    old = parser.Expression.parse(
+    old = routeros_diff.expressions.Expression.parse(
         "add name=core router-id=10.127.0.1",
         "/routing ospf instance",
     )
-    new = parser.Expression.parse(
+    new = routeros_diff.expressions.Expression.parse(
         "add name=core router-id=10.127.0.99",
         "/routing ospf instance",
     )
@@ -108,21 +112,21 @@ def test_diff_expression_modified():
 
 
 def test_diff_expression_deleted():
-    old = parser.Expression.parse(
+    old = routeros_diff.expressions.Expression.parse(
         "add name=core router-id=10.127.0.1",
         "/routing ospf instance",
     )
-    new = parser.Expression.parse("add name=core",
-                                      "/routing ospf instance",)
+    new = routeros_diff.expressions.Expression.parse("add name=core",
+                                      "/routing ospf instance", )
     assert str(new.diff(old)[0]) == 'set [ find name=core ] router-id=""'
 
 
 def test_diff_expression_added():
-    old = parser.Expression.parse(
+    old = routeros_diff.expressions.Expression.parse(
         "add name=core",
         "/routing ospf instance",
     )
-    new = parser.Expression.parse(
+    new = routeros_diff.expressions.Expression.parse(
         "add name=core router-id=10.127.0.1",
         "/routing ospf instance",
     )
@@ -131,11 +135,11 @@ def test_diff_expression_added():
 
 def test_set_without_find():
     """Such as when modifying an IP service"""
-    old = parser.Expression.parse(
+    old = routeros_diff.expressions.Expression.parse(
         "set telnet address=10.0.0.0/8 disabled=yes",
         "/foo"
     )
-    new = parser.Expression.parse(
+    new = routeros_diff.expressions.Expression.parse(
         "set telnet address=10.0.0.0/8 disabled=no",
         "/foo"
     )
@@ -143,11 +147,11 @@ def test_set_without_find():
 
 
 def test_diff_expression_source_uses_find_ok():
-    old = parser.Expression.parse(
+    old = routeros_diff.expressions.Expression.parse(
         "set [ find name=core ] router-id=10.127.0.1",
         "/routing ospf instance",
     )
-    new = parser.Expression.parse(
+    new = routeros_diff.expressions.Expression.parse(
         "add name=core router-id=10.127.0.88",
         "/routing ospf instance",
     )
@@ -155,11 +159,11 @@ def test_diff_expression_source_uses_find_ok():
 
 
 def test_diff_expression_both_use_find():
-    old = parser.Expression.parse(
+    old = routeros_diff.expressions.Expression.parse(
         "set [ find name=core ] router-id=10.127.0.1",
         "/routing ospf instance",
     )
-    new = parser.Expression.parse(
+    new = routeros_diff.expressions.Expression.parse(
         "set [ find name=core ] router-id=10.127.0.99",
         "/routing ospf instance",
     )
@@ -167,25 +171,25 @@ def test_diff_expression_both_use_find():
 
 
 def test_diff_expression_source_uses_find_different_names():
-    old = parser.Expression.parse(
+    old = routeros_diff.expressions.Expression.parse(
         "set [ find name=core_foo ] router-id=10.127.0.1",
         "/routing ospf instance",
     )
-    new = parser.Expression.parse(
+    new = routeros_diff.expressions.Expression.parse(
         "add name=core router-id=10.127.0.88",
         "/routing ospf instance",
     )
-    with pytest.raises(parser.CannotDiff) as cm:
+    with pytest.raises(routeros_diff.exceptions.CannotDiff) as cm:
         str(new.diff(old)[0])
     assert "mismatched natural IDs" in str(cm.value)
 
 
 def test_diff_section_modify_with_natural_key():
-    old = parser.Section.parse(
+    old = routeros_diff.sections.Section.parse(
         "/routing ospf instance\n" 
         "add name=core router-id=10.127.0.1\n"
     )
-    new = parser.Section.parse(
+    new = routeros_diff.sections.Section.parse(
         "/routing ospf instance\n" 
         "add name=core router-id=10.127.0.99\n"
     )
@@ -196,8 +200,8 @@ def test_diff_section_modify_with_natural_key():
 
 
 def test_diff_section_create_with_natural_key():
-    old = parser.Section.parse("/routing ospf instance\n")
-    new = parser.Section.parse(
+    old = routeros_diff.sections.Section.parse("/routing ospf instance\n")
+    new = routeros_diff.sections.Section.parse(
         "/routing ospf instance\n" 
         "add name=core router-id=10.127.0.1\n"
     )
@@ -208,11 +212,11 @@ def test_diff_section_create_with_natural_key():
 
 
 def test_diff_section_delete_with_natural_key():
-    old = parser.Section.parse(
+    old = routeros_diff.sections.Section.parse(
         "/routing ospf instance\n" 
         "add name=core router-id=10.127.0.1\n"
     )
-    new = parser.Section.parse("/routing ospf instance\n")
+    new = routeros_diff.sections.Section.parse("/routing ospf instance\n")
 
     diffed = new.diff(old)
     assert len(diffed.expressions) == 1
@@ -220,11 +224,11 @@ def test_diff_section_delete_with_natural_key():
 
 
 def test_diff_section_modify_with_default_yes():
-    old = parser.Section.parse(
+    old = routeros_diff.sections.Section.parse(
         "/routing ospf instance\n" 
         "set [ find default=yes ] router-id=10.127.1.1 name=old foo=bar\n"
     )
-    new = parser.Section.parse(
+    new = routeros_diff.sections.Section.parse(
         "/routing ospf instance\n" 
         'set [ find default=yes ] router-id=10.127.1.2 name=new\n'
     )
@@ -235,11 +239,11 @@ def test_diff_section_modify_with_default_yes():
 
 
 def test_diff_section_modify_with_default_yes2():
-    old = parser.Section.parse(
+    old = routeros_diff.sections.Section.parse(
         "/routing ospf instance\n" 
         "set [ find default=yes ] disabled=yes redistribute-static=as-type-1\n"
     )
-    new = parser.Section.parse(
+    new = routeros_diff.sections.Section.parse(
         "/routing ospf instance\n" 
         'set [ find default=yes ] name=default router-id=10.127.0.250 redistribute-static=as-type-1\n'
     )
@@ -250,11 +254,11 @@ def test_diff_section_modify_with_default_yes2():
 
 
 def test_diff_section_modify_with_default_yes3():
-    old = parser.Section.parse(
+    old = routeros_diff.sections.Section.parse(
         "/routing ospf area\n" 
         'set [ find default=yes ] disabled=yes\n'
     )
-    new = parser.Section.parse(
+    new = routeros_diff.sections.Section.parse(
         "/routing ospf area\n" 
         "add area-id=1.1.1.1 name=core\n"
     )
@@ -265,11 +269,11 @@ def test_diff_section_modify_with_default_yes3():
 
 
 def test_diff_section_delete_with_default_yes():
-    old = parser.Section.parse(
+    old = routeros_diff.sections.Section.parse(
         "/routing ospf instance\n" 
         "set [ find default=yes ] router-id=10.127.1.1 name=old foo=bar\n"
     )
-    new = parser.Section.parse(
+    new = routeros_diff.sections.Section.parse(
         "/routing ospf instance\n"
     )
     diffed = new.diff(old)
@@ -277,10 +281,10 @@ def test_diff_section_delete_with_default_yes():
 
 
 def test_diff_section_not_in_old_with_default_yes():
-    old = parser.Section.parse(
+    old = routeros_diff.sections.Section.parse(
         "/routing ospf instance\n"
     )
-    new = parser.Section.parse(
+    new = routeros_diff.sections.Section.parse(
         "/routing ospf instance\n"
         "set [ find default=yes ] router-id=10.127.1.1 name=old foo=bar\n"
     )
@@ -289,11 +293,11 @@ def test_diff_section_not_in_old_with_default_yes():
 
 
 def test_diff_section_modify_with_comment_natural_key():
-    old = parser.Section.parse(
+    old = routeros_diff.sections.Section.parse(
         "/routing ospf instance\n" 
         'add comment="Just a comment [ID:123]" router-id=10.127.0.1\n'
     )
-    new = parser.Section.parse(
+    new = routeros_diff.sections.Section.parse(
         "/routing ospf instance\n" 
         'add comment="Just a comment [ID:123]" router-id=10.127.0.99\n'
     )
@@ -305,11 +309,11 @@ def test_diff_section_modify_with_comment_natural_key():
 
 def test_diff_section_modify_with_comment_no_key():
     # There is a comment with no key in it
-    old = parser.Section.parse(
+    old = routeros_diff.sections.Section.parse(
         "/foo\n" 
         'add comment="Just a comment" router-id=10.127.0.99\n'
     )
-    new = parser.Section.parse(
+    new = routeros_diff.sections.Section.parse(
         "/foo\n" 
         'add comment="Just a comment" router-id=10.127.0.99\n'
     )
@@ -324,11 +328,11 @@ def test_diff_section_modify_with_new_comment_natural_key():
     Auto-transitioning from using 'name' to using a comment-based ID
     is just too tricky right now.
     """
-    old = parser.Section.parse(
+    old = routeros_diff.sections.Section.parse(
         "/routing ospf instance\n"
         'add name="foo" router-id=10.127.0.1\n'
     )
-    new = parser.Section.parse(
+    new = routeros_diff.sections.Section.parse(
         "/routing ospf instance\n"
         'add name="foo" comment="Just a comment [ID:123]" router-id=10.127.0.99\n'
     )
@@ -345,11 +349,11 @@ def test_diff_section_modify_with_old_comment_natural_key():
     Auto-transitioning from using a comment-based ID to using 'name'
     is just too tricky right now.
     """
-    old = parser.Section.parse(
+    old = routeros_diff.sections.Section.parse(
         "/routing ospf instance\n"
         'add name="foo" comment="Just a comment [ID:123]" router-id=10.127.0.1\n'
     )
-    new = parser.Section.parse(
+    new = routeros_diff.sections.Section.parse(
         "/routing ospf instance\n"
         'add name="foo" router-id=10.127.0.99\n'
     )
@@ -361,11 +365,11 @@ def test_diff_section_modify_with_old_comment_natural_key():
 
 
 def test_diff_section_modify_with_positional_id():
-    old = parser.Section.parse(
+    old = routeros_diff.sections.Section.parse(
         "/routing ospf instance\n" 
         "set core router-id=10.127.0.1\n"
     )
-    new = parser.Section.parse(
+    new = routeros_diff.sections.Section.parse(
         "/routing ospf instance\n" 
         "set core router-id=10.127.0.99\n"
     )
@@ -376,8 +380,8 @@ def test_diff_section_modify_with_positional_id():
 
 
 def test_diff_section_add_with_positional_id():
-    old = parser.Section.parse("/routing ospf instance")
-    new = parser.Section.parse(
+    old = routeros_diff.sections.Section.parse("/routing ospf instance")
+    new = routeros_diff.sections.Section.parse(
         "/routing ospf instance\n"
         "set core router-id=10.127.0.99\n"
     )
@@ -388,11 +392,11 @@ def test_diff_section_add_with_positional_id():
 
 
 def test_diff_section_delete_with_positional_id():
-    old = parser.Section.parse(
+    old = routeros_diff.sections.Section.parse(
         "/routing ospf instance\n" 
         "set core router-id=10.127.0.1\n"
     )
-    new = parser.Section.parse("/routing ospf instance")
+    new = routeros_diff.sections.Section.parse("/routing ospf instance")
 
     diffed = new.diff(old)
     assert len(diffed.expressions) == 1
@@ -400,12 +404,12 @@ def test_diff_section_delete_with_positional_id():
 
 
 def test_diff_section_multiple():
-    old = parser.Section.parse(
+    old = routeros_diff.sections.Section.parse(
         "/routing ospf instance\n"
         "add name=deleted router-id=10.127.0.1\n"
         "add name=modified router-id=10.127.0.10\n"
     )
-    new = parser.Section.parse(
+    new = routeros_diff.sections.Section.parse(
         "/routing ospf instance\n"
         "add name=modified router-id=10.127.0.20\n"
         "add name=added router-id=10.127.0.30\n"
@@ -419,11 +423,11 @@ def test_diff_section_multiple():
 
 
 def test_diff_section_no_ids_modify():
-    old = parser.Section.parse(
+    old = routeros_diff.sections.Section.parse(
         "/ip blah\n" 
         "add address=10.100.0.1/24 interface=ether1-core\n"
     )
-    new = parser.Section.parse(
+    new = routeros_diff.sections.Section.parse(
         "/ip blah\n" 
         "add address=10.120.0.1/24 interface=ether1-core\n"
     )
@@ -435,12 +439,12 @@ def test_diff_section_no_ids_modify():
 
 
 def test_diff_section_order_important():
-    old = parser.Section.parse(
+    old = routeros_diff.sections.Section.parse(
         "/ip firewall\n" 
         "add foo=bar moo=cow\n"
         "add foo=a moo=b\n"
     )
-    new = parser.Section.parse(
+    new = routeros_diff.sections.Section.parse(
         "/ip firewall\n" 
         "add foo=bar moo=cow\n"
         "add foo=a moo=new-value\n"
@@ -454,11 +458,11 @@ def test_diff_section_order_important():
 
 
 def test_diff_section_ethernet_names_reset():
-    old = parser.Section.parse(
+    old = routeros_diff.sections.Section.parse(
         "/interface ethernet\n" 
         "set [ find default-name=ether1 ] name=ether1-core-primary\n"
     )
-    new = parser.Section.parse(
+    new = routeros_diff.sections.Section.parse(
         "/interface ethernet\n" 
         "set [ find default-name=ether1 ] name=ether1\n"
     )
@@ -469,11 +473,11 @@ def test_diff_section_ethernet_names_reset():
 
 
 def test_diff_section_dont_remove_ethernet_interfaces():
-    old = parser.Section.parse(
+    old = routeros_diff.sections.Section.parse(
         "/interface ethernet\n" 
         "set [ find default-name=ether1 ] name=ether1\n"
     )
-    new = parser.Section.parse(
+    new = routeros_diff.sections.Section.parse(
         "/interface ethernet\n"
     )
 
@@ -482,12 +486,12 @@ def test_diff_section_dont_remove_ethernet_interfaces():
 
 
 def test_diff_section_firewall():
-    old = parser.Section.parse(
+    old = routeros_diff.sections.Section.parse(
         "/ip firewall nat\n" 
         'add chain=a comment="[ ID:1 ]"\n'
         'add chain=c comment="[ ID:3 ]"\n'
     )
-    new = parser.Section.parse(
+    new = routeros_diff.sections.Section.parse(
         "/ip firewall nat\n" 
         'add chain=a comment="[ ID:1 ]"\n'
         'add chain=b comment="[ ID:2 ]"\n'
@@ -499,12 +503,12 @@ def test_diff_section_firewall():
 
 
 def test_dont_remove_anything_that_is_already_disabled():
-    old = parser.Section.parse(
+    old = routeros_diff.sections.Section.parse(
         "/routing ospf area\n"
         "set [ find default=yes ] disabled=yes\n"
         "add area-id=1.1.1.1 name=core\n"
     )
-    new = parser.Section.parse(
+    new = routeros_diff.sections.Section.parse(
         "/routing ospf area\n"
         "add area-id=1.1.1.1 name=core\n"
     )
@@ -514,10 +518,10 @@ def test_dont_remove_anything_that_is_already_disabled():
 
 
 def test_diff_section_dont_add_ethernet_interfaces():
-    old = parser.Section.parse(
+    old = routeros_diff.sections.Section.parse(
         "/interface ethernet\n"
     )
-    new = parser.Section.parse(
+    new = routeros_diff.sections.Section.parse(
         "/interface ethernet\n"
         "set [ find default-name=ether1 ] name=ether1\n"
     )
