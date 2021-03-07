@@ -1,11 +1,11 @@
-# Diff and prettify RouterOS files
+# Diff and prettify RouterOS configuration files
 
 [![PyPI license](https://img.shields.io/pypi/l/ansicolortags.svg)](https://pypi.python.org/pypi/ansicolortags/)
 [![PyPI pyversions](https://img.shields.io/pypi/pyversions/ansicolortags.svg)](https://pypi.python.org/pypi/ansicolortags/)
 [![Tests](https://github.com/gardunha/routeros-diff/actions/workflows/ci.yaml/badge.svg)](https://github.com/gardunha/routeros-diff/actions/workflows/ci.yaml)
 
 
-## Diff
+## Get a diff
 
 The `routeros_diff` (alias `ros_diff`) command will take two RouterOS files and diff them:
 
@@ -20,13 +20,45 @@ new = RouterOSConfig.parse(new_config_string)
 print(old.diff(new))
 ```
 
-### Diffing features
+## Examples:
 
-* IDs in comments (i.e. `comment="Block outgoing SMTP [ ID:block-smtp ]"`). IDs in comments allow
-for diffing of expressions which have no natural IDs (a good example of this is firewall rules).
-* Maintaining of order where ordering is important (again, in firewall rules)
+A simple example first:
 
-### Limitations
+```
+# Old:
+/routing ospf instance
+add name=core router-id=100.127.0.1
+
+# New:
+/routing ospf instance
+add name=core router-id=100.127.0.99
+
+# Diff:
+/routing ospf instance
+set [ find name=core ] router-id=100.127.0.99
+```
+
+Here is a more complex example where we use custom IDs in order to maintain 
+expression ordering (see 'Natural Keys & IDs' below for details):
+
+```
+# Old:
+/ip firewall nat 
+add chain=a comment="Example text [ ID:1 ]"
+add chain=c comment="[ ID:3 ]"
+
+# New:
+/ip firewall nat 
+add chain=a comment="Example text [ ID:1 ]"
+add chain=b comment="[ ID:2 ]"
+add chain=c comment="[ ID:3 ]"
+
+# Diff:
+/ip firewall nat 
+add chain=b comment="[ ID:2 ]" place-before=[ find where comment~ID:3 ]
+```
+
+### Usage & limitations
 
 This aim is for this diffing process to work well within a limited range of conditions.
 The configuration format is an entire scripting language in itself, and so this library
@@ -121,43 +153,6 @@ Or using Python:
 from routeros_diff.parser import RouterOSConfig
 config = RouterOSConfig.parse(config_string)
 print(config)
-```
-
-## Examples:
-
-Simple:
-
-```
-# Old:
-/routing ospf instance
-add name=core router-id=100.127.0.1
-
-# New:
-/routing ospf instance
-add name=core router-id=100.127.0.99
-
-# Diff:
-/routing ospf instance
-set [ find name=core ] router-id=100.127.0.99
-```
-
-Firewall NAT rules:
-
-```
-# Old:
-/ip firewall nat 
-add chain=a comment="Example text [ ID:1 ]"
-add chain=c comment="[ ID:3 ]"
-
-# New:
-/ip firewall nat 
-add chain=a comment="Example text [ ID:1 ]"
-add chain=b comment="[ ID:2 ]"
-add chain=c comment="[ ID:3 ]"
-
-# Diff:
-/ip firewall nat 
-add chain=b comment="[ ID:2 ]" place-before=[ find where comment~ID:3 ]
 ```
 
 ## Concepts
