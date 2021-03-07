@@ -4,6 +4,11 @@
 [![PyPI pyversions](https://img.shields.io/pypi/pyversions/ansicolortags.svg)](https://pypi.python.org/pypi/ansicolortags/)
 [![Tests](https://github.com/gardunha/routeros-diff/actions/workflows/ci.yaml/badge.svg)](https://github.com/gardunha/routeros-diff/actions/workflows/ci.yaml)
 
+## Installation
+
+Install using your favourite Python package manager. For example:
+
+    pip install routeros-diff
 
 ## Get a diff
 
