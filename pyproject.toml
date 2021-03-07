@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "routeros-diff"
 description = "Tools for parsing & diffing RouterOS configuration files. Can produce config file patches."
-version = "0.1.1"
+version = "0.2.0"
 authors = ["Adam Charnock <adam.charnock@gardunha.net>"]
 repository = "https://github.com/gardunha/routeros-diff"
 license = "MIT"
