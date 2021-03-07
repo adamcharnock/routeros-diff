@@ -1,4 +1,4 @@
-# Diff and prettify RouterOS configuration files
+# Create configuration patches for your Mikrotik routers
 
 [![PyPI license](https://img.shields.io/pypi/l/ansicolortags.svg)](https://pypi.python.org/pypi/ansicolortags/)
 [![PyPI pyversions](https://img.shields.io/pypi/pyversions/ansicolortags.svg)](https://pypi.python.org/pypi/ansicolortags/)
