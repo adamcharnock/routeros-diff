@@ -49,18 +49,18 @@ expression ordering (see 'Natural Keys & IDs' below for details):
 ```r
 # Old:
 /ip firewall nat 
-add chain=a comment="Example text [ ID:1 ]"
-add chain=c comment="[ ID:3 ]"
+add chain=a comment="Example text [ ID:block-smtp ]"
+add chain=c comment="[ ID:block-smb ]"
 
 # New:
 /ip firewall nat 
-add chain=a comment="Example text [ ID:1 ]"
-add chain=b comment="[ ID:2 ]"
-add chain=c comment="[ ID:3 ]"
+add chain=a comment="Example text [ ID:block-smtp ]"
+add chain=b comment="[ ID:block-nfs ]"
+add chain=c comment="[ ID:block-smb ]"
 
 # Diff:
 /ip firewall nat 
-add chain=b comment="[ ID:2 ]" place-before=[ find where comment~ID:3 ]
+add chain=b comment="[ ID:block-nfs ]" place-before=[ find where comment~ID:block-smb ]
 ```
 
 ### Usage & limitations
@@ -121,18 +121,18 @@ intelligently maintain order. For example:
 ```r
 # Old:
 /ip firewall nat 
-add chain=a comment="Example text [ ID:1 ]"
-add chain=c comment="[ ID:3 ]"
+add chain=a comment="Example text [ ID:block-smtp ]"
+add chain=c comment="[ ID:block-smb ]"
 
 # New:
 /ip firewall nat 
-add chain=a comment="Example text [ ID:1 ]"
-add chain=b comment="[ ID:2 ]"
-add chain=c comment="[ ID:3 ]"
+add chain=a comment="Example text [ ID:block-smtp ]"
+add chain=b comment="[ ID:block-nfs ]"
+add chain=c comment="[ ID:block-smb ]"
 
 # Diff:
 /ip firewall nat 
-add chain=b comment="[ ID:2 ]" place-before=[ find where comment~ID:3 ]
+add chain=b comment="[ ID:block-nfs ]" place-before=[ find where comment~ID:block-smb ]
 ```
 
 Note that the parser uses `place-before` to correctly place the new firewall rule.
