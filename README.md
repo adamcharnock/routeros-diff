@@ -24,7 +24,7 @@ print(old.diff(new))
 
 A simple example first:
 
-```
+```r
 # Old:
 /routing ospf instance
 add name=core router-id=100.127.0.1
@@ -41,7 +41,7 @@ set [ find name=core ] router-id=100.127.0.99
 Here is a more complex example where we use custom IDs in order to maintain 
 expression ordering (see 'Natural Keys & IDs' below for details):
 
-```
+```r
 # Old:
 /ip firewall nat 
 add chain=a comment="Example text [ ID:1 ]"
@@ -69,13 +69,17 @@ be able to diff anything produced by `/export`.
 
 The following is NOT supported:
 
-    ## NOT SUPPORTED, DONT DO THIS ##
-    /routing ospf instance add name=core router-id=100.127.0.1
+```r
+## NOT SUPPORTED, DONT DO THIS ##
+/routing ospf instance add name=core router-id=100.127.0.1
+```
 
 Rather, this must be formatted as separate 'sections' and 'expressions'. For example:
 
-    /routing ospf instance 
-    add name=core router-id=100.127.0.1
+```r
+/routing ospf instance 
+add name=core router-id=100.127.0.1
+```
 
 The section in this example is `/routing ospf instance`, and the expression is `add name=core router-id=100.127.0.1`.
 Each section may contain multiple expressions (just like the output you see from `/export`).
@@ -87,7 +91,9 @@ additions, modifications, deletions, and ordering.
 
 The parser refers to these unique identities as naturals keys & natural IDs. For example:
 
-    add name=core router-id=100.127.0.1
+```r
+add name=core router-id=100.127.0.1
+```
 
 Here the natural key is `name` and the natural ID is `core`. The parser assumes `name` will be the natural key,
 but is configured to use other keys in some situations (see `NATURAL_KEYS`).
@@ -95,7 +101,9 @@ but is configured to use other keys in some situations (see `NATURAL_KEYS`).
 Additionally, you can choose to manually add your own IDs to expressions. This is done using comments.
 For example:
 
-    add chain=a comment="[ ID:1 ]"
+```r
+add chain=a comment="[ ID:1 ]"
+```
 
 These comment-based IDs take priority over whatever the parser may have otherwise used.
 If using comment IDs, you should make sure you set them for all expressions in
@@ -105,7 +113,7 @@ This is especially useful for firewall rules. The order of firewall rules is imp
 obvious natural keys/IDs. Using comments IDs for your firewall rules allows the parser to
 intelligently maintain order. For example:
 
-```
+```r
 # Old:
 /ip firewall nat 
 add chain=a comment="Example text [ ID:1 ]"
@@ -143,7 +151,7 @@ the easier it will be for us to find a resolution.
 The `routeros_prettify` (alias `ros_prettify`) command will parse an existing configuration and re-print it in a
 standard format with common sections collapsed:
 
-```
+```r
 routeros_prettify old_config.rsc new_config.rsc
 ```
 
@@ -159,17 +167,21 @@ print(config)
 
 This is a **section** with a path of `/ip address` and two expressions:
 
-    /ip address
-    add address=1.2.3.4
-    add address=5.6.7.8
+```r
+/ip address
+add address=1.2.3.4
+add address=5.6.7.8
+```
 
 This is an **expression** with a command of **add**, and a key-value argument of `address=1.2.3.4`:
 
-    add address=1.2.3.4
+```r
+add address=1.2.3.4
+```
 
 # Release process:
 
-```
+```bash
 export VERSION=a.b.c
 dephell convert
 black setup.py
