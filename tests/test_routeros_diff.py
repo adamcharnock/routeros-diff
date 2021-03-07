@@ -82,9 +82,9 @@ def test_find():
     expression = parser.Expression.parse(find, "/interface ethernet")
 
     assert expression.command == "set"
-    assert expression.find_command.command == "find"
-    assert expression.find_command.find_command == None
-    assert expression.find_command.args["default-name"] == "ether3"
+    assert expression.find_expression.command == "find"
+    assert expression.find_expression.find_expression == None
+    assert expression.find_expression.args["default-name"] == "ether3"
     assert expression.args["name"] == "ether3-bp-backup"
 
 

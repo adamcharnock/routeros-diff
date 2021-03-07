@@ -6,7 +6,7 @@
 
 ## Prettify
 
-The `routeros_prettify` (alias `ros_prettify`) command will parse an existing configuration and re-print it in a 
+The `routeros_prettify` (alias `ros_prettify`) command will parse an existing configuration and re-print it in a
 standard format with common sections collapsed:
 
 ```
@@ -25,9 +25,7 @@ print(config)
 
 The `routeros_diff` (alias `ros_diff`) command will take two RouterOS files and diff them:
 
-```
-routeros_diff old_config.rsc new_config.rsc
-```
+    routeros_diff old_config.rsc new_config.rsc
 
 Or using Python:
 
@@ -40,16 +38,78 @@ print(old.diff(new))
 
 ### Diffing features
 
-* IDs in comments (i.e. `comment="Block outgoing SMTP [ ID:block-smtp ]"`). IDs in comments allow 
+* IDs in comments (i.e. `comment="Block outgoing SMTP [ ID:block-smtp ]"`). IDs in comments allow
   for diffing of expressions which have no natural IDs (a good example of this is firewall rules).
 * Maintaining of order where ordering is important (again, in firewall rules)
 
 ### Limitations
 
-This aim is for this diffing process to work well within a limited range of conditions. 
-The configuration format is an entire scripting language in itself, and so this library 
-cannot sensibly hope to parse any arbitrary input. As a rule of thumb, this library should 
+This aim is for this diffing process to work well within a limited range of conditions.
+The configuration format is an entire scripting language in itself, and so this library
+cannot sensibly hope to parse any arbitrary input. As a rule of thumb, this library should
 be able to diff anything produced by `/export`
+
+### Sections and expressions
+
+The following is NOT supported:
+
+## NOT SUPPORTED, DONT DO THIS ##
+/routing ospf instance add name=core router-id=100.127.0.1
+
+Rather, this must be formatted as separate 'sections' and 'expressions'. For example:
+
+    /routing ospf instance 
+    add name=core router-id=100.127.0.1
+
+The section in this example is `/routing ospf instance`, and the expression is `add name=core router-id=100.127.0.1`.
+Each section may contain multiple expressions (just like the output you see from `/export`).
+
+### Natural Keys & IDs
+
+The parser will try to uniquely identify each expression. This allows the parser to be intelligent regarding
+additions, modifications, deletions, and ordering.
+
+The parser refers to these unique identities as naturals keys & natural IDs. For example:
+
+    add name=core router-id=100.127.0.1
+
+Here the natural key is `name` and the natural ID is `core`. The parser assumes `name` will be the natural key, 
+but is configured to use other keys in some situations (see `NATURAL_KEYS`).
+
+Additionally, you can choose to manually add your own IDs to expressions. This is done using comments. 
+For example:
+
+    add chain=a comment="[ ID:1 ]"
+
+These comment-based IDs take priority over whatever the parser may have otherwise used. 
+If using comment IDs, you should make sure you set them for all expressions in 
+that section.
+
+This is especially useful for firewall rules. The order of firewall rules is important, and they have no 
+obvious natural keys/IDs. Using comments IDs for your firewall rules allows the parser to 
+intelligently maintain order. For example:
+
+```
+# Old:
+/ip firewall nat 
+add chain=a comment="Example text [ ID:1 ]"
+add chain=c comment="[ ID:3 ]"
+
+# New:
+/ip firewall nat 
+add chain=a comment="Example text [ ID:1 ]"
+add chain=b comment="[ ID:2 ]"
+add chain=c comment="[ ID:3 ]"
+
+# Diff:
+/ip firewall nat 
+add chain=b comment="[ ID:2 ]" place-before=[ find where comment~ID:3 ]
+```
+
+Note that the parser uses `place-before` to correctly place the new firewall rule.
+
+*Without using comment IDs, the parse would have to drop and recreate all firewall rules.* This would 
+be non-ideal for reasons of both security and reliability.
 
 ### Reporting errors
 
