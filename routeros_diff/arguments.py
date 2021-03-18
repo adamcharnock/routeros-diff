@@ -42,6 +42,9 @@ class AbstractArgValue:
     def __str__(self):
         return str(self.value)
 
+    def __html__(self):
+        return str(self)
+
 
 @dataclass(eq=False)
 class ArgValue(AbstractArgValue):
@@ -59,6 +62,9 @@ class ArgValue(AbstractArgValue):
     def quote(self) -> str:
         return quote(self.value)
 
+    def __html__(self):
+        return f'<span class="ros-v">{self.quote()}</span>'
+
 
 @dataclass(eq=False)
 class ExpressionArgValue(AbstractArgValue):
@@ -74,6 +80,9 @@ class ExpressionArgValue(AbstractArgValue):
 
     def quote(self) -> str:
         return f"[ {self.value} ]"
+
+    def __html__(self):
+        return f'<span class="ros-v ros-vc">{self}</span>'
 
 
 @dataclass(init=False)
@@ -175,6 +184,25 @@ class Arg:
         """
         return not self.is_positional
 
+    def __html__(self, natural_key=None):
+        if self.value is None:
+            # Positional argument, so just render the key
+            html = f'<span class="ros-a ros-pa">{self.key}</span>'
+        else:
+            # Standard key/value pair
+            html = (
+                f'<span class="ros-k">{self.key}</span>'
+                f'<span class="ros-com">{self.comparator}</span>'
+                f'{self.value.__html__()}'
+            )
+
+        if natural_key == 'comment-id':
+            natural_key = 'comment'
+        if natural_key and self.key == natural_key:
+            html = f'<span class="ros-nat">{html}</span>'
+
+        return html
+
 
 class ArgList(list):
     """A list of several arguments"""
@@ -182,6 +210,9 @@ class ArgList(list):
     def __str__(self):
         """Turn this parsed list of args back into a config string"""
         return " ".join([str(a) for a in self])
+
+    def __html__(self, natural_key=None):
+        return " ".join([f'<span class="ros-a">{a.__html__(natural_key)}</span>' for a in self])
 
     def __getitem__(self, item):
         """Key an item by index or by key"""

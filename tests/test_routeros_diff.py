@@ -81,6 +81,17 @@ def test_line_continuation_before_blank_line():
     assert str(config.sections[0]) == "/foo\nadd foo=a\n"
 
 
+def test_line_before_space_char():
+    config = parser.RouterOSConfig.parse(
+        '/ip route\n'
+        'add comment="Fallback static route for ensuring access to management network [\\\n'
+        '    \\_ID:mgmt ]" distance=200 dst-address=10.0.0.0/8 gateway=10.100.0.250'
+    )
+    assert len(config.sections) == 1
+    breakpoint()
+    assert "[ ID:mgmt ]" in str(config.sections[0])
+
+
 def test_find():
     find = "set [ find default-name=ether3 ] name=ether3-bp-backup"
     expression = routeros_diff.expressions.Expression.parse(find, "/interface ethernet")

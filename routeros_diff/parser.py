@@ -33,6 +33,10 @@ class RouterOSConfig:
     def __str__(self):
         return "\n".join(str(s) for s in self.sections if s.expressions)
 
+    def __html__(self):
+        html = "<br>\n".join(s.__html__() for s in self.sections if s.expressions)
+        return f'<span class="ros">{html}</span>'
+
     @classmethod
     def parse(cls, s: str, settings: Union[Settings, dict] = None):
         """Takes an entire RouterOS configuration blob"""

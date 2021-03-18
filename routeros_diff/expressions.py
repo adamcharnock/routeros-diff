@@ -51,6 +51,22 @@ class Expression:
 
         return " ".join([x for x in (self.command, find_expression_, str(self.args)) if x])
 
+    def __html__(self):
+        if self.find_expression:
+            find_expression_ = f'<span class="ros-fc">[ {self.find_expression.__html__()} ]</span>'
+        else:
+            find_expression_ = ''
+
+        if self.command:
+            command = f'<span class="ros-c">{self.command}</span>'
+        else:
+            command = ''
+
+        natural_key, _ = self.natural_key_and_id
+
+        html = " ".join([x for x in (command, find_expression_, self.args.__html__(natural_key)) if x])
+        return f'<span class="ros-e">{html}</span>'
+
     @staticmethod
     def parse(s: str, section_path: str, settings: Settings=None):
         """Return an Expression object for the given string
@@ -150,7 +166,7 @@ class Expression:
                     section_path=self.section_path,
                     command="set",
                     args=diffed_args,
-                    find_expression=find_expression(new_natural_key, new_natural_id),
+                    find_expression=find_expression(new_natural_key, new_natural_id, self.settings),
                     settings=self.settings,
                 )
             ]
@@ -185,7 +201,7 @@ class Expression:
                 pass
 
             # ID is positional arg
-            if self.args[0].is_positional:
+            if self.args and self.args[0].is_positional:
                 return None, self.args[0].key
 
             return None, None
@@ -223,7 +239,7 @@ class Expression:
                 return Expression(
                     section_path=self.section_path,
                     command="remove",
-                    find_expression=find_expression(natural_key, natural_id),
+                    find_expression=find_expression(natural_key, natural_id, self.settings),
                     args=ArgList(),
                     settings=self.settings,
                 )

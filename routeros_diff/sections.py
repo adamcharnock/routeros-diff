@@ -32,6 +32,12 @@ class Section:
             s += f"{expression}\n"
         return s
 
+    def __html__(self):
+        s = f'<span class="ros-p">{self.path}</span><br>\n'
+        for expression in self.expressions:
+            s += f'{expression.__html__()}<br>\n'
+        return f'<span class="ros-s">{s}</span>'
+
     @classmethod
     def parse(cls, s: str, settings: Settings = None):
         """
@@ -47,6 +53,9 @@ class Section:
         s = s.strip()
         assert s.startswith("/"), "Was not passed a section block"
 
+        # Remove escaped new lines where the new line starts with a \_
+        # (\_ should be interpreted as space)
+        s = re.sub(r" *\\\n *\\_", " ", s)
         # Remove escaped new lines where a key=value pair has been split by a new line
         s = re.sub(r"= *\\\n *", "=", s)
         # Remove escaped new lines
@@ -55,7 +64,7 @@ class Section:
 
         lines = s.split("\n")
         # Remove blank lines and comments
-        lines = [l.strip() for l in lines if l.strip() and not l.startswith("#")]
+        lines = [l.strip() for l in lines if l.strip() and not l.strip().startswith("#")]
 
         path = lines[0]
 
@@ -164,7 +173,7 @@ class Section:
                     new_expression.args.append(
                         Arg(
                             key="place-before",
-                            value=find_expression(*next_expression.natural_key_and_id),
+                            value=find_expression(*next_expression.natural_key_and_id, self.settings),
                         )
                     )
             else:

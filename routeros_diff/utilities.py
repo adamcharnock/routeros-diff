@@ -1,5 +1,5 @@
 
-def find_expression(key, value, *args):
+def find_expression(key, value, settings, *args):
     """Create an expression which can be used as a value for Expression.find_expression"""
     from routeros_diff.arguments import ArgList, Arg
     from routeros_diff.expressions import Expression
@@ -11,6 +11,7 @@ def find_expression(key, value, *args):
             command="find",
             find_expression=None,
             args=ArgList([Arg("where", None), Arg("comment", f"ID:{value}", "~")]),
+            settings=settings,
         )
     else:
         return Expression(
@@ -18,6 +19,7 @@ def find_expression(key, value, *args):
             command="find",
             find_expression=None,
             args=ArgList([Arg(key, value)]),
+            settings=settings,
         )
 
 
