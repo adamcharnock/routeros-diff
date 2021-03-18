@@ -161,6 +161,10 @@ class Expression:
                 )
             ]
         else:
+            if diffed_args and diffed_args[0].is_positional:
+                # We're using a find expression here, so no need for a
+                # positional arg identifying the record to modify
+                diffed_args.pop(0)
             return [
                 Expression(
                     section_path=self.section_path,
@@ -224,7 +228,7 @@ class Expression:
     @property
     def finds_by_default(self):
         """Does this expression select it's target by selecting default=yes / default=no"""
-        return self.find_expression and self.find_expression.args[0].key == "default"
+        return self.find_expression and self.find_expression.args and self.find_expression.args[0].key == "default"
 
     def as_delete(self):
         """Return this expression as a deletion"""
@@ -278,7 +282,7 @@ class Expression:
             # Is probably a physical interface
             return None
 
-        if self.is_single_object_expression or self.args[0].is_positional:
+        if self.is_single_object_expression or (self.args and self.args[0].is_positional):
             # Some sections do not contain multiple entities to update.
             # For example, /system/identity
             command = "set"

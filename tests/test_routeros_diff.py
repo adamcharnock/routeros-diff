@@ -88,7 +88,6 @@ def test_line_before_space_char():
         '    \\_ID:mgmt ]" distance=200 dst-address=10.0.0.0/8 gateway=10.100.0.250'
     )
     assert len(config.sections) == 1
-    breakpoint()
     assert "[ ID:mgmt ]" in str(config.sections[0])
 
 
@@ -511,6 +510,20 @@ def test_diff_section_firewall():
 
     diffed = new.diff(old)
     assert str(diffed.expressions[0]) == 'add chain=b comment="[ ID:2 ]" place-before=[ find where comment~ID:3 ]'
+
+
+def test_diff_section_named_default_with_comment_id():
+    old = routeros_diff.sections.Section.parse(
+        "/routing bgp instance\n" 
+        'set default as=65000 comment="[ ID:main ]" router-id=100.127.0.1\n'
+    )
+    new = routeros_diff.sections.Section.parse(
+        "/routing bgp instance\n" 
+        'set default as=65000 router-id=100.127.0.1 comment="[ ID:main ]" client-to-client-reflection=yes\n'
+    )
+
+    diffed = new.diff(old)
+    assert str(diffed.expressions[0]) == 'set [ find where comment~ID:main ] client-to-client-reflection=yes'
 
 
 def test_dont_remove_anything_that_is_already_disabled():
