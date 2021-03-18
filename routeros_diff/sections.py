@@ -193,15 +193,32 @@ class Section:
 
         Eg. /system/identity
         """
-        diffed = self._diff_by_value(old)
-        single_object_expressions = []
-        for expression in diffed.expressions:
-            if expression.command == "remove":
-                pass
-            else:
-                single_object_expressions.append(expression)
+        if len(self.expressions) > 1 or len(old.expressions) > 1:
+            raise CannotDiff(
+                f"Section {self.path} is a single object section and so must not contain more than expression. "
+                f"Please condense multiple expressions into a single expression"
+            )
 
-        return replace(diffed, expressions=single_object_expressions)
+        if not self.expressions:
+            # No expressions, so return this empty section
+            # and assume it will not be printed
+            return self
+        if not old.expressions:
+            # No old expressions, so just return this section
+            # within needing to do any merging
+            return self
+
+        # Ok, we need to do some merging
+        new_expression = self.expressions[0]
+        old_expression = old.expressions[0]
+
+        diffed_args = new_expression.args.diff(old_expression.args)
+        if not diffed_args:
+            diff_expressions = []
+        else:
+            diff_expressions = [replace(new_expression, args=diffed_args)]
+
+        return replace(self, expressions=diff_expressions)
 
     def _diff_default_only(self, old: "Section") -> "Section":
         """Diff a section based on selection of default entity

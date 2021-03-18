@@ -602,6 +602,42 @@ def test_diff_config_modify_identity_order_changed():
     assert len(diffed.sections) == 0, str(diffed)
 
 
+def test_diff_config_modify_identity_remove_arg():
+    """This is one of menus that has no kind of object ids,
+    rather the menu just edits one thing, the router's identity
+    """
+    old = parser.RouterOSConfig.parse(
+        "/system identity\n" 
+        "set name=core arg=value\n"
+    )
+    new = parser.RouterOSConfig.parse(
+        "/system identity\n" 
+        "set name=core\n"
+    )
+
+    diffed = new.diff(old).sections[0]
+    assert len(diffed.expressions) == 1
+    assert str(diffed.expressions[0]) == 'set arg=""'
+
+
+def test_diff_config_modify_identity_add_arg():
+    """This is one of menus that has no kind of object ids,
+    rather the menu just edits one thing, the router's identity
+    """
+    old = parser.RouterOSConfig.parse(
+        "/system identity\n" 
+        "set name=core\n"
+    )
+    new = parser.RouterOSConfig.parse(
+        "/system identity\n" 
+        "set name=core arg=value\n"
+    )
+
+    diffed = new.diff(old).sections[0]
+    assert len(diffed.expressions) == 1
+    assert str(diffed.expressions[0]) == "set arg=value"
+
+
 def test_diff_config_add_identity():
     old = parser.RouterOSConfig.parse("")
     new = parser.RouterOSConfig.parse(
