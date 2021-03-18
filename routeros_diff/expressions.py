@@ -107,7 +107,7 @@ class Expression:
             settings=settings,
         )
 
-    def diff(self, old: "Expression") -> List["Expression"]:
+    def diff(self, old: "Expression", old_verbose: Optional["Expression"] = None) -> List["Expression"]:
         """Compare self to the given old expression
 
         Returns an expression which will migrate the old expression to
@@ -137,7 +137,8 @@ class Expression:
             )
 
         try:
-            diffed_args = self.args.diff(old.args)
+            old_verbose_args = old_verbose.args if old_verbose else None
+            diffed_args = self.args.diff(old.args, old_verbose_args)
         except CannotDiff:
             return [
                 old.as_delete(),

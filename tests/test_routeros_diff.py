@@ -450,12 +450,12 @@ def test_diff_section_no_ids_modify():
 
 def test_diff_section_order_important():
     old = routeros_diff.sections.Section.parse(
-        "/ip firewall\n" 
+        "/ip firewall nat\n" 
         "add foo=bar moo=cow\n"
         "add foo=a moo=b\n"
     )
     new = routeros_diff.sections.Section.parse(
-        "/ip firewall\n" 
+        "/ip firewall nat\n" 
         "add foo=bar moo=cow\n"
         "add foo=a moo=new-value\n"
     )
@@ -524,6 +524,24 @@ def test_diff_section_named_default_with_comment_id():
 
     diffed = new.diff(old)
     assert str(diffed.expressions[0]) == 'set [ find where comment~ID:main ] client-to-client-reflection=yes'
+
+
+def test_diff_section_named_default_with_comment_id_with_verbose():
+    old = routeros_diff.sections.Section.parse(
+        "/routing bgp instance\n" 
+        'set default as=65000 comment="[ ID:main ]" router-id=100.127.0.1\n'
+    )
+    old_verbose = routeros_diff.sections.Section.parse(
+        "/routing bgp instance\n" 
+        'set default as=65000 comment="[ ID:main ]" router-id=100.127.0.1 client-to-client-reflection=yes\n'
+    )
+    new = routeros_diff.sections.Section.parse(
+        "/routing bgp instance\n" 
+        'set default as=65000 router-id=100.127.0.1 comment="[ ID:main ]" client-to-client-reflection=yes\n'
+    )
+
+    diffed = new.diff(old, old_verbose)
+    assert len(diffed.expressions) == 0
 
 
 def test_dont_remove_anything_that_is_already_disabled():
@@ -620,6 +638,32 @@ def test_diff_config_modify_identity_remove_arg():
     assert str(diffed.expressions[0]) == 'set arg=""'
 
 
+def test_diff_config_modify_identity_remove_arg_with_verbose():
+    """This is one of menus that has no kind of object ids,
+    rather the menu just edits one thing, the router's identity
+    """
+    old = parser.RouterOSConfig.parse(
+        "/system identity\n" 
+        "set name=core arg=value\n"
+    )
+    old_verbose = parser.RouterOSConfig.parse(
+        "/system identity\n" 
+        "set name=core arg=value\n"
+    )
+
+    new = parser.RouterOSConfig.parse(
+        "/system identity\n" 
+        "set name=core\n"
+    )
+
+    # The verbose data shows that arg=value is already set,
+    # but is just isn't visible in the regular export from the router.
+    # Therefore, because the value is already set, the parser
+    # can see that no changes are required
+    diffed = new.diff(old)
+    assert len(diffed.sections) == 0
+
+
 def test_diff_config_modify_identity_add_arg():
     """This is one of menus that has no kind of object ids,
     rather the menu just edits one thing, the router's identity
@@ -636,6 +680,32 @@ def test_diff_config_modify_identity_add_arg():
     diffed = new.diff(old).sections[0]
     assert len(diffed.expressions) == 1
     assert str(diffed.expressions[0]) == "set arg=value"
+
+
+def test_diff_config_modify_identity_add_arg_with_verbose():
+    """This is one of menus that has no kind of object ids,
+    rather the menu just edits one thing, the router's identity
+    """
+    old = parser.RouterOSConfig.parse(
+        "/system identity\n" 
+        "set name=core\n"
+    )
+    old_verbose = parser.RouterOSConfig.parse(
+        "/system identity\n" 
+        "set name=core arg=value\n"
+    )
+
+    new = parser.RouterOSConfig.parse(
+        "/system identity\n" 
+        "set name=core arg=value\n"
+    )
+
+    # The verbose data shows that arg=value is already set,
+    # but is just isn't visible in the regular export from the router.
+    # Therefore, because the value is already set, the parser
+    # can see that no changes are required
+    diffed = new.diff(old, old_verbose=old_verbose)
+    assert len(diffed.sections) == 0
 
 
 def test_diff_config_add_identity():

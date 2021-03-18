@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Union, List, TYPE_CHECKING
+from typing import Union, List, TYPE_CHECKING, Optional
 
 from routeros_diff.settings import Settings
 from routeros_diff.utilities import quote
@@ -250,7 +250,7 @@ class ArgList(list):
         """Get a list of keys for all args"""
         return [arg.key for arg in self]
 
-    def diff(self, old: "ArgList") -> "ArgList":
+    def diff(self, old: "ArgList", old_verbose: Optional["ArgList"] = None) -> "ArgList":
         """Diff this list with the given old list, and return a new list of args
 
         This may:
@@ -311,8 +311,11 @@ class ArgList(list):
 
         for k in new_keys:
             if k in added or k in modified:
-                # Added keys are added with their value
-                diffed_arg_list.append(Arg(key=k, value=self[k]))
+                # Added keys are added with their value only if
+                # their value does not match the value in the
+                # old verbose output
+                if old_verbose is None or self[k] != old_verbose.get(k):
+                    diffed_arg_list.append(Arg(key=k, value=self[k]))
 
         return diffed_arg_list
 

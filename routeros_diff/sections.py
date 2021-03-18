@@ -114,7 +114,7 @@ class Section:
                 return i
         raise KeyError(f"({natural_key}, {natural_id})")
 
-    def diff(self, old: "Section") -> "Section":
+    def diff(self, old: "Section", old_verbose: Optional["Section"] = None) -> "Section":
         """Compare self to the given old section
 
         Returns a section which will migrate the old section to
@@ -127,10 +127,10 @@ class Section:
             raise CannotDiff(f"Section paths do not match")
         if self.is_single_object_section or old.is_single_object_section:
             # Eg. /system/identity
-            diff = self._diff_single_object(old)
+            diff = self._diff_single_object(old, old_verbose)
         elif self.modifies_default_only and old.modifies_default_only:
             # Both sections only change the default record
-            diff = self._diff_default_only(old)
+            diff = self._diff_default_only(old, old_verbose)
         elif self.modifies_default_only and not old.expressions:
             # The new one sets values on the default entry, but the entry
             # isn't mentioned in the old section (probably because it has
@@ -142,19 +142,19 @@ class Section:
                 # makes no mention of it. We cannot delete default entries,
                 # so just ignore it. We ignore it by removing it and starting
                 # the diff process again
-                diff = self.diff(Section(old.path, [], settings=self.settings))
+                diff = self.diff(Section(old.path, [], settings=self.settings), old_verbose)
             else:
                 raise CannotDiff(
                     "Cannot handle section which contain a mix of default setting and non-default setting"
                 )
         elif old.uses_natural_ids and self.uses_natural_ids:
             # We have natural keys * ids, so do a diff using those
-            diff = self._diff_by_id(old)
+            diff = self._diff_by_id(old, old_verbose)
         else:
             # Well we lack natural keys/ids, so just compare values and do the
             # best we can. This will result in additions/deletions, but no
             # modifications.
-            diff = self._diff_by_value(old)
+            diff = self._diff_by_value(old, old_verbose)
 
         # Handle ordering if we need to
         if self.settings.is_expression_order_important(self.path) and diff.expressions:
@@ -188,7 +188,7 @@ class Section:
 
         return diff
 
-    def _diff_single_object(self, old: "Section") -> "Section":
+    def _diff_single_object(self, old: "Section", old_verbose: Optional["Section"] = None) -> "Section":
         """Diff for a single object section
 
         Eg. /system/identity
@@ -210,9 +210,10 @@ class Section:
 
         # Ok, we need to do some merging
         new_expression = self.expressions[0]
+        old_verbose_args = old_verbose.expressions[0].args if old_verbose else None
         old_expression = old.expressions[0]
 
-        diffed_args = new_expression.args.diff(old_expression.args)
+        diffed_args = new_expression.args.diff(old_expression.args, old_verbose_args)
         if not diffed_args:
             diff_expressions = []
         else:
@@ -220,7 +221,7 @@ class Section:
 
         return replace(self, expressions=diff_expressions)
 
-    def _diff_default_only(self, old: "Section") -> "Section":
+    def _diff_default_only(self, old: "Section", old_verbose: Optional["Section"] = None) -> "Section":
         """Diff a section based on selection of default entity
 
         I.e. set [ find default=yes ] foo=bar
@@ -234,7 +235,8 @@ class Section:
                 "Section can only contain one expression if using [ find default=x ]"
             )
 
-        args_diff = self.expressions[0].args.diff(old.expressions[0].args)
+        old_verbose_args = old_verbose.expressions[0].args if old_verbose else None
+        args_diff = self.expressions[0].args.diff(old.expressions[0].args, old_verbose_args)
 
         if args_diff:
             expressions = [replace(self.expressions[0], args=args_diff)]
@@ -247,7 +249,7 @@ class Section:
             settings=self.settings,
         )
 
-    def _diff_by_id(self, old: "Section") -> "Section":
+    def _diff_by_id(self, old: "Section", old_verbose: Optional["Section"] = None) -> "Section":
         """Diff using natural keys/ids"""
         all_natural_ids = sorted(set(self.natural_ids) | set(old.natural_ids))
         new_expression: Optional[Expression]
@@ -275,10 +277,10 @@ class Section:
             elif new_expression and not old_expression:
                 # Creation
                 create.append(new_expression.as_create())
-
             else:
                 # Modification
-                modify.extend(new_expression.diff(old_expression))
+                old_expression_verbose = old_verbose.get(natural_id) if old_verbose else None
+                modify.extend(new_expression.diff(old_expression, old_expression_verbose))
 
         # No point modifying if nothing needs changing
         modify = [e for e in modify if e.has_kw_args]
@@ -287,7 +289,7 @@ class Section:
         expressions = remove + modify + create
         return Section(path=self.path, expressions=[e for e in expressions if e], settings=self.settings)
 
-    def _diff_by_value(self, old: "Section") -> "Section":
+    def _diff_by_value(self, old: "Section", old_verbose: Optional["Section"] = None) -> "Section":
         """Diff based on the values of expressions
 
         This is the diff of last resort. It is not possible to
@@ -326,6 +328,13 @@ class Section:
             if natural_id == natural_id_:
                 return expression
         raise KeyError(natural_id)
+
+    def get(self, natural_id, default=None):
+        """Get the expression for the given natural ID"""
+        try:
+            return self[natural_id]
+        except KeyError:
+            return default
 
     def with_only_removals(self):
         """Return a copy of this section containing only 'remove' expressions"""

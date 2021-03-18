@@ -101,7 +101,14 @@ class RouterOSConfig:
         """Is the given section path in this config file?"""
         return path in self.keys()
 
-    def diff(self, old: "RouterOSConfig"):
+    def get(self, path, default=None):
+        """Get the section for the given section path"""
+        try:
+            return self[path]
+        except KeyError:
+            return default
+
+    def diff(self, old: "RouterOSConfig", old_verbose: Optional["RouterOSConfig"]=None):
         """Diff this config file with an old config file
 
         Will return a new config file which can be used to
@@ -139,7 +146,8 @@ class RouterOSConfig:
                 # Section not found in old config, so just create a dummy empty section
                 old_section = Section(path=section_path, expressions=[], settings=self.settings)
 
-            diffed_sections.append(new_section.diff(old_section))
+            old_section_verbose = old_verbose.get(section_path) if old_verbose else None
+            diffed_sections.append(new_section.diff(old_section, old_verbose=old_section_verbose))
 
         return RouterOSConfig(
             timestamp=None,
