@@ -112,7 +112,7 @@ class Section:
         for i, expression in enumerate(self.expressions):
             if expression.natural_key_and_id == (natural_key, natural_id):
                 return i
-        raise KeyError()
+        raise KeyError(f"({natural_key}, {natural_id})")
 
     def diff(self, old: "Section") -> "Section":
         """Compare self to the given old section
