@@ -62,7 +62,7 @@ class Settings:
     # Ordering is important in these sections. Ensure
     # entities maintain their order. Natural keys/ids must be
     # present in sections listed here
-    expression_order_important = {"/ip firewall*"}
+    expression_order_important = {"/ip firewall calea", "/ip firewall filter", "/ip firewall mangle", "/ip firewall nat"}
 
     def __init__(self, natural_keys: Dict[str, str]=None, no_deletions: List[str]=None, no_creations: List[str]=None):
         if natural_keys is not None:
