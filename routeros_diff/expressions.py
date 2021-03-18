@@ -85,7 +85,7 @@ class Expression:
         if find_expression_:
             find_expression_ = find_expression_.group(1).strip()
             s = re.sub(r"\[.*?\]", "", s)
-            find_expression_ = Expression.parse(find_expression_, section_path)
+            find_expression_ = Expression.parse(find_expression_, section_path, settings)
         else:
             find_expression_ = None
 
@@ -271,7 +271,7 @@ class Expression:
             section_path=self.section_path,
             command="remove",
             find_expression=Expression(
-                section_path="", command="find", find_expression=None, args=self.args,
+                section_path="", command="find", find_expression=None, args=self.args, settings=self.settings
             ),
             args=ArgList(),
             settings=self.settings,
