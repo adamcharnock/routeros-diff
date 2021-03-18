@@ -20,6 +20,7 @@ class Section:
         add address=5.6.7.8
 
     """
+
     path: str
     expressions: List[Expression]
 
@@ -35,7 +36,7 @@ class Section:
     def __html__(self):
         s = f'<span class="ros-p">{self.path}</span><br>\n'
         for expression in self.expressions:
-            s += f'{expression.__html__()}<br>\n'
+            s += f"{expression.__html__()}<br>\n"
         return f'<span class="ros-s">{s}</span>'
 
     @classmethod
@@ -64,17 +65,27 @@ class Section:
 
         lines = s.split("\n")
         # Remove blank lines and comments
-        lines = [l.strip() for l in lines if l.strip() and not l.strip().startswith("#")]
+        lines = [
+            l.strip() for l in lines if l.strip() and not l.strip().startswith("#")
+        ]
 
         path = lines[0]
 
         # Santity checks
-        assert path.startswith('/'), f"Section path must start with a '/'. It was: {path}"
+        assert path.startswith(
+            "/"
+        ), f"Section path must start with a '/'. It was: {path}"
         for l in lines[1:]:
-            assert not l.startswith('/'), f"Expression must not start with a '/'. It was: {path}"
+            assert not l.startswith(
+                "/"
+            ), f"Expression must not start with a '/'. It was: {path}"
 
-        expressions = [Expression.parse(l, section_path=path, settings=settings) for l in lines[1:]]
-        return cls(path=path, expressions=[e for e in expressions if e], settings=settings)
+        expressions = [
+            Expression.parse(l, section_path=path, settings=settings) for l in lines[1:]
+        ]
+        return cls(
+            path=path, expressions=[e for e in expressions if e], settings=settings
+        )
 
     @property
     def uses_natural_ids(self):
@@ -114,7 +125,9 @@ class Section:
                 return i
         raise KeyError(f"({natural_key}, {natural_id})")
 
-    def diff(self, old: "Section", old_verbose: Optional["Section"] = None) -> "Section":
+    def diff(
+        self, old: "Section", old_verbose: Optional["Section"] = None
+    ) -> "Section":
         """Compare self to the given old section
 
         Returns a section which will migrate the old section to
@@ -142,7 +155,9 @@ class Section:
                 # makes no mention of it. We cannot delete default entries,
                 # so just ignore it. We ignore it by removing it and starting
                 # the diff process again
-                diff = self.diff(Section(old.path, [], settings=self.settings), old_verbose)
+                diff = self.diff(
+                    Section(old.path, [], settings=self.settings), old_verbose
+                )
             else:
                 raise CannotDiff(
                     "Cannot handle section which contain a mix of default setting and non-default setting"
@@ -173,7 +188,9 @@ class Section:
                     new_expression.args.append(
                         Arg(
                             key="place-before",
-                            value=find_expression(*next_expression.natural_key_and_id, self.settings),
+                            value=find_expression(
+                                *next_expression.natural_key_and_id, self.settings
+                            ),
                         )
                     )
             else:
@@ -181,14 +198,18 @@ class Section:
                 wipe_expression = Expression(
                     section_path=self.path,
                     command="remove",
-                    find_expression=Expression("", "find", None, ArgList(), settings=self.settings),
+                    find_expression=Expression(
+                        "", "find", None, ArgList(), settings=self.settings
+                    ),
                     args=ArgList(),
                 )
                 diff = replace(self, expressions=[wipe_expression] + self.expressions)
 
         return diff
 
-    def _diff_single_object(self, old: "Section", old_verbose: Optional["Section"] = None) -> "Section":
+    def _diff_single_object(
+        self, old: "Section", old_verbose: Optional["Section"] = None
+    ) -> "Section":
         """Diff for a single object section
 
         Eg. /system/identity
@@ -221,7 +242,9 @@ class Section:
 
         return replace(self, expressions=diff_expressions)
 
-    def _diff_default_only(self, old: "Section", old_verbose: Optional["Section"] = None) -> "Section":
+    def _diff_default_only(
+        self, old: "Section", old_verbose: Optional["Section"] = None
+    ) -> "Section":
         """Diff a section based on selection of default entity
 
         I.e. set [ find default=yes ] foo=bar
@@ -236,20 +259,20 @@ class Section:
             )
 
         old_verbose_args = old_verbose.expressions[0].args if old_verbose else None
-        args_diff = self.expressions[0].args.diff(old.expressions[0].args, old_verbose_args)
+        args_diff = self.expressions[0].args.diff(
+            old.expressions[0].args, old_verbose_args
+        )
 
         if args_diff:
             expressions = [replace(self.expressions[0], args=args_diff)]
         else:
             expressions = []
 
-        return Section(
-            path=self.path,
-            expressions=expressions,
-            settings=self.settings,
-        )
+        return Section(path=self.path, expressions=expressions, settings=self.settings,)
 
-    def _diff_by_id(self, old: "Section", old_verbose: Optional["Section"] = None) -> "Section":
+    def _diff_by_id(
+        self, old: "Section", old_verbose: Optional["Section"] = None
+    ) -> "Section":
         """Diff using natural keys/ids"""
         all_natural_ids = sorted(set(self.natural_ids) | set(old.natural_ids))
         new_expression: Optional[Expression]
@@ -279,17 +302,27 @@ class Section:
                 create.append(new_expression.as_create())
             else:
                 # Modification
-                old_expression_verbose = old_verbose.get(natural_id) if old_verbose else None
-                modify.extend(new_expression.diff(old_expression, old_expression_verbose))
+                old_expression_verbose = (
+                    old_verbose.get(natural_id) if old_verbose else None
+                )
+                modify.extend(
+                    new_expression.diff(old_expression, old_expression_verbose)
+                )
 
         # No point modifying if nothing needs changing
         modify = [e for e in modify if e.has_kw_args]
 
         # Note we remove first, as this avoids issue with value conflicts
         expressions = remove + modify + create
-        return Section(path=self.path, expressions=[e for e in expressions if e], settings=self.settings)
+        return Section(
+            path=self.path,
+            expressions=[e for e in expressions if e],
+            settings=self.settings,
+        )
 
-    def _diff_by_value(self, old: "Section", old_verbose: Optional["Section"] = None) -> "Section":
+    def _diff_by_value(
+        self, old: "Section", old_verbose: Optional["Section"] = None
+    ) -> "Section":
         """Diff based on the values of expressions
 
         This is the diff of last resort. It is not possible to
@@ -314,7 +347,11 @@ class Section:
                 create.append(new_expression.as_create())
 
         expressions = remove + create
-        return Section(path=self.path, expressions=[e for e in expressions if e], settings=self.settings)
+        return Section(
+            path=self.path,
+            expressions=[e for e in expressions if e],
+            settings=self.settings,
+        )
 
     @property
     def natural_ids(self) -> List[str]:

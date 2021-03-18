@@ -1,4 +1,3 @@
-
 def find_expression(key, value, settings, *args):
     """Create an expression which can be used as a value for Expression.find_expression"""
     from routeros_diff.arguments import ArgList, Arg

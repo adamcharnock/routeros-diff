@@ -12,7 +12,7 @@ from routeros_diff.exceptions import CannotDiff
 
 @dataclass
 class Expression:
-    """ Represents an entire expression
+    """Represents an entire expression
 
     Example expressions are:
 
@@ -49,26 +49,36 @@ class Expression:
         else:
             find_expression_ = ""
 
-        return " ".join([x for x in (self.command, find_expression_, str(self.args)) if x])
+        return " ".join(
+            [x for x in (self.command, find_expression_, str(self.args)) if x]
+        )
 
     def __html__(self):
         if self.find_expression:
-            find_expression_ = f'<span class="ros-fc">[ {self.find_expression.__html__()} ]</span>'
+            find_expression_ = (
+                f'<span class="ros-fc">[ {self.find_expression.__html__()} ]</span>'
+            )
         else:
-            find_expression_ = ''
+            find_expression_ = ""
 
         if self.command:
             command = f'<span class="ros-c">{self.command}</span>'
         else:
-            command = ''
+            command = ""
 
         natural_key, _ = self.natural_key_and_id
 
-        html = " ".join([x for x in (command, find_expression_, self.args.__html__(natural_key)) if x])
+        html = " ".join(
+            [
+                x
+                for x in (command, find_expression_, self.args.__html__(natural_key))
+                if x
+            ]
+        )
         return f'<span class="ros-e">{html}</span>'
 
     @staticmethod
-    def parse(s: str, section_path: str, settings: Settings=None):
+    def parse(s: str, section_path: str, settings: Settings = None):
         """Return an Expression object for the given string
 
         Example:
@@ -85,7 +95,9 @@ class Expression:
         if find_expression_:
             find_expression_ = find_expression_.group(1).strip()
             s = re.sub(r"\[.*?\]", "", s)
-            find_expression_ = Expression.parse(find_expression_, section_path, settings)
+            find_expression_ = Expression.parse(
+                find_expression_, section_path, settings
+            )
         else:
             find_expression_ = None
 
@@ -107,7 +119,9 @@ class Expression:
             settings=settings,
         )
 
-    def diff(self, old: "Expression", old_verbose: Optional["Expression"] = None) -> List["Expression"]:
+    def diff(
+        self, old: "Expression", old_verbose: Optional["Expression"] = None
+    ) -> List["Expression"]:
         """Compare self to the given old expression
 
         Returns an expression which will migrate the old expression to
@@ -171,7 +185,9 @@ class Expression:
                     section_path=self.section_path,
                     command="set",
                     args=diffed_args,
-                    find_expression=find_expression(new_natural_key, new_natural_id, self.settings),
+                    find_expression=find_expression(
+                        new_natural_key, new_natural_id, self.settings
+                    ),
                     settings=self.settings,
                 )
             ]
@@ -229,7 +245,11 @@ class Expression:
     @property
     def finds_by_default(self):
         """Does this expression select it's target by selecting default=yes / default=no"""
-        return self.find_expression and self.find_expression.args and self.find_expression.args[0].key == "default"
+        return (
+            self.find_expression
+            and self.find_expression.args
+            and self.find_expression.args[0].key == "default"
+        )
 
     def as_delete(self):
         """Return this expression as a deletion"""
@@ -244,7 +264,9 @@ class Expression:
                 return Expression(
                     section_path=self.section_path,
                     command="remove",
-                    find_expression=find_expression(natural_key, natural_id, self.settings),
+                    find_expression=find_expression(
+                        natural_key, natural_id, self.settings
+                    ),
                     args=ArgList(),
                     settings=self.settings,
                 )
@@ -272,7 +294,11 @@ class Expression:
             section_path=self.section_path,
             command="remove",
             find_expression=Expression(
-                section_path="", command="find", find_expression=None, args=self.args, settings=self.settings
+                section_path="",
+                command="find",
+                find_expression=None,
+                args=self.args,
+                settings=self.settings,
             ),
             args=ArgList(),
             settings=self.settings,
@@ -283,7 +309,9 @@ class Expression:
             # Is probably a physical interface
             return None
 
-        if self.is_single_object_expression or (self.args and self.args[0].is_positional):
+        if self.is_single_object_expression or (
+            self.args and self.args[0].is_positional
+        ):
             # Some sections do not contain multiple entities to update.
             # For example, /system/identity
             command = "set"

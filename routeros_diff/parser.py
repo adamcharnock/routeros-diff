@@ -108,7 +108,9 @@ class RouterOSConfig:
         except KeyError:
             return default
 
-    def diff(self, old: "RouterOSConfig", old_verbose: Optional["RouterOSConfig"]=None):
+    def diff(
+        self, old: "RouterOSConfig", old_verbose: Optional["RouterOSConfig"] = None
+    ):
         """Diff this config file with an old config file
 
         Will return a new config file which can be used to
@@ -138,21 +140,25 @@ class RouterOSConfig:
                 new_section = self[section_path]
             else:
                 # Section not found in new config, so just create a dummy empty section
-                new_section = Section(path=section_path, expressions=[], settings=self.settings)
+                new_section = Section(
+                    path=section_path, expressions=[], settings=self.settings
+                )
 
             if section_path in old_sections:
                 old_section = old[section_path]
             else:
                 # Section not found in old config, so just create a dummy empty section
-                old_section = Section(path=section_path, expressions=[], settings=self.settings)
+                old_section = Section(
+                    path=section_path, expressions=[], settings=self.settings
+                )
 
             old_section_verbose = old_verbose.get(section_path) if old_verbose else None
-            diffed_sections.append(new_section.diff(old_section, old_verbose=old_section_verbose))
+            diffed_sections.append(
+                new_section.diff(old_section, old_verbose=old_section_verbose)
+            )
 
         return RouterOSConfig(
             timestamp=None,
             router_os_version=None,
             sections=[s for s in diffed_sections if s.expressions],
         )
-
-

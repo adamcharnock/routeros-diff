@@ -19,6 +19,7 @@ class AbstractArgValue:
 
     The values are `core` and `10.127.0.88`.
     """
+
     value: Union[str, "Expression"]
 
     def __eq__(self, other):
@@ -76,6 +77,7 @@ class ExpressionArgValue(AbstractArgValue):
 
     The value `[ find where comment~ID:3 ]` is an expression value.
     """
+
     value: "Expression"
 
     def quote(self) -> str:
@@ -193,11 +195,11 @@ class Arg:
             html = (
                 f'<span class="ros-k">{self.key}</span>'
                 f'<span class="ros-com">{self.comparator}</span>'
-                f'{self.value.__html__()}'
+                f"{self.value.__html__()}"
             )
 
-        if natural_key == 'comment-id':
-            natural_key = 'comment'
+        if natural_key == "comment-id":
+            natural_key = "comment"
         if natural_key and self.key == natural_key:
             html = f'<span class="ros-nat">{html}</span>'
 
@@ -212,7 +214,9 @@ class ArgList(list):
         return " ".join([str(a) for a in self])
 
     def __html__(self, natural_key=None):
-        return " ".join([f'<span class="ros-a">{a.__html__(natural_key)}</span>' for a in self])
+        return " ".join(
+            [f'<span class="ros-a">{a.__html__(natural_key)}</span>' for a in self]
+        )
 
     def __getitem__(self, item):
         """Key an item by index or by key"""
@@ -250,7 +254,9 @@ class ArgList(list):
         """Get a list of keys for all args"""
         return [arg.key for arg in self]
 
-    def diff(self, old: "ArgList", old_verbose: Optional["ArgList"] = None) -> "ArgList":
+    def diff(
+        self, old: "ArgList", old_verbose: Optional["ArgList"] = None
+    ) -> "ArgList":
         """Diff this list with the given old list, and return a new list of args
 
         This may:
