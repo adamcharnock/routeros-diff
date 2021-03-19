@@ -20,9 +20,9 @@ Or using Python:
 
 ```python
 from routeros_diff.parser import RouterOSConfig
-old = RouterOSConfig.parse(old_config_string)
 new = RouterOSConfig.parse(new_config_string)
-print(old.diff(new))
+old = RouterOSConfig.parse(old_config_string)
+print(new.diff(old))
 ```
 
 ## Examples:
@@ -69,6 +69,32 @@ This aim is for this diffing process to work well within a limited range of cond
 The configuration format is an entire scripting language in itself, and so this library
 cannot sensibly hope to parse any arbitrary input. As a rule of thumb, this library should
 be able to diff anything produced by `/export`.
+
+### Advanced use
+
+`RouterOSConfig.parse` also accepts a second optional parameter as follows:
+
+```python
+from routeros_diff.parser import RouterOSConfig
+new = RouterOSConfig.parse(new_config_string)
+old = RouterOSConfig.parse(old_config_string)
+
+# Produced using: /export verbose
+old_verbose = RouterOSConfig.parse(old_verbose_config_string)
+
+print(new.diff(old, old_verbose))
+```
+
+Providing `old_verbose` allows the diffing algorithm to be a smarter in the 
+diff it produces. When `old_verbose` is provided, the algorithm can automatically 
+avoid setting certain values which it knows to be unchanged. This only 
+applies in cases where both a) the new config sets an argument back to its 
+default value, and b) the old config already has the argument set the equal value.
+
+While this feature isn't required to produce functioning diffs, it does 
+make it easier to produce diffs without unnecessary expressions. To put it another way,
+use this method if you want to be sure that diffing two functionally-equal configurations 
+produces an empty diff.
 
 ### Sections and expressions
 
@@ -166,6 +192,15 @@ Or using Python:
 from routeros_diff.parser import RouterOSConfig
 config = RouterOSConfig.parse(config_string)
 print(config)
+```
+
+You can also produce a syntax-highlighted HTML version of the configuration as follows
+([see example css](https://github.com/gardunha/routeros-diff/blob/main/extra/ros-syntax.css)):
+
+```python
+from routeros_diff.parser import RouterOSConfig
+config = RouterOSConfig.parse(config_string)
+print(config.__html__())
 ```
 
 ## Settings
