@@ -638,32 +638,6 @@ def test_diff_config_modify_identity_remove_arg():
     assert str(diffed.expressions[0]) == 'set arg=""'
 
 
-def test_diff_config_modify_identity_remove_arg_with_verbose():
-    """This is one of menus that has no kind of object ids,
-    rather the menu just edits one thing, the router's identity
-    """
-    old = parser.RouterOSConfig.parse(
-        "/system identity\n" 
-        "set name=core arg=value\n"
-    )
-    old_verbose = parser.RouterOSConfig.parse(
-        "/system identity\n" 
-        "set name=core arg=value\n"
-    )
-
-    new = parser.RouterOSConfig.parse(
-        "/system identity\n" 
-        "set name=core\n"
-    )
-
-    # The verbose data shows that arg=value is already set,
-    # but is just isn't visible in the regular export from the router.
-    # Therefore, because the value is already set, the parser
-    # can see that no changes are required
-    diffed = new.diff(old)
-    assert len(diffed.sections) == 0
-
-
 def test_diff_config_modify_identity_add_arg():
     """This is one of menus that has no kind of object ids,
     rather the menu just edits one thing, the router's identity
