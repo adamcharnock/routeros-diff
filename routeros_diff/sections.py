@@ -24,7 +24,7 @@ class Section:
     path: str
     expressions: List[Expression]
 
-    settings: Settings = None
+    settings: Settings
 
     def __str__(self):
         """Convert this parsed expression into a valid RouterOS configuration"""
@@ -202,6 +202,7 @@ class Section:
                         "", "find", None, ArgList(), settings=self.settings
                     ),
                     args=ArgList(),
+                    settings=self.settings,
                 )
                 diff = replace(self, expressions=[wipe_expression] + self.expressions)
 

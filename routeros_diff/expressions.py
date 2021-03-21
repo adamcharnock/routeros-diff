@@ -34,7 +34,7 @@ class Expression:
     # The list of args in this expression
     args: ArgList
 
-    settings: Settings = None
+    settings: Settings
 
     def __post_init__(self):
         assert "=" not in self.command, (

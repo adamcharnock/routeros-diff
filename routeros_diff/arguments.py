@@ -109,7 +109,7 @@ class Arg:
     # Common comparators are = or ~
     comparator: str = "="
 
-    settings: Settings = None
+    settings: Settings
 
     def __init__(
         self,
