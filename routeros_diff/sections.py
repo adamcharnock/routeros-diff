@@ -181,18 +181,25 @@ class Section:
                     new_expression_index = self.expression_index_for_natural_key(
                         natural_key, natural_id
                     )
-                    next_expression = self.expressions[new_expression_index + 1]
-                    new_expression = self.expressions[new_expression_index]
 
-                    # Update with place-before value
-                    new_expression.args.append(
-                        Arg(
-                            key="place-before",
-                            value=find_expression(
-                                *next_expression.natural_key_and_id, self.settings
-                            ),
+                    new_expression = self.expressions[new_expression_index]
+                    try:
+                        next_expression = self.expressions[new_expression_index + 1]
+                    except IndexError:
+                        next_expression = None
+
+                    # Update with place-before value if next_expression is available.
+                    # Otherwise this is the last expression in the list, so just add
+                    # it as normal (as this will append it to the end, which is what we want)
+                    if next_expression:
+                        new_expression.args.append(
+                            Arg(
+                                key="place-before",
+                                value=find_expression(
+                                    *next_expression.natural_key_and_id, self.settings
+                                ),
+                            )
                         )
-                    )
             else:
                 # Cannot be smart, so do a full wipe and recreate
                 wipe_expression = Expression(

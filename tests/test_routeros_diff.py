@@ -467,6 +467,42 @@ def test_diff_section_order_important():
     assert str(diffed.expressions[2]) == "add foo=a moo=new-value"
 
 
+def test_diff_section_order_important_with_ids_modify():
+    old = routeros_diff.sections.Section.parse(
+        "/ip firewall nat\n" 
+        'add foo=bar moo=sheep comment="[ ID:1 ]"\n'
+        'add foo=a moo=b comment="[ ID:2 ]"\n'
+    )
+    new = routeros_diff.sections.Section.parse(
+        "/ip firewall nat\n" 
+        'add foo=bar moo=cow comment="[ ID:1 ]"\n'
+        'add foo=a moo=new-value comment="[ ID:2 ]"\n'
+    )
+
+    diffed = new.diff(old)
+    assert len(diffed.expressions) == 2
+    assert str(diffed.expressions[0]) == "set [ find where comment~ID:1 ] moo=cow"
+    assert str(diffed.expressions[1]) == "set [ find where comment~ID:2 ] moo=new-value"
+
+
+def test_diff_section_order_important_with_ids_add():
+    old = routeros_diff.sections.Section.parse(
+        "/ip firewall nat\n" 
+        'add foo=bar moo=cow comment="[ ID:1 ]"\n'
+    )
+    new = routeros_diff.sections.Section.parse(
+        "/ip firewall nat\n" 
+        'add moo=sheep comment="[ ID:2 ]"\n'
+        'add foo=bar moo=cow comment="[ ID:1 ]"\n'
+        'add moo=duck comment="[ ID:3 ]"\n'
+    )
+
+    diffed = new.diff(old)
+    assert len(diffed.expressions) == 2
+    assert str(diffed.expressions[0]) == 'add moo=sheep comment="[ ID:2 ]" place-before=[ find where comment~ID:1 ]'
+    assert str(diffed.expressions[1]) == 'add moo=duck comment="[ ID:3 ]"'
+
+
 def test_diff_section_ethernet_names_reset():
     old = routeros_diff.sections.Section.parse(
         "/interface ethernet\n" 
