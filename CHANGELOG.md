@@ -1,5 +1,9 @@
 # RouterOS Diff Changelog
 
+## 0.5.1
+
+* Bug: Further improved implementation and testing of order-preserving logic
+
 ## 0.5.0
 
 * Bug: Improved implementation and testing of order-preserving logic
