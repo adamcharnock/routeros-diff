@@ -215,11 +215,20 @@ class Expression:
                 pass
 
             # ID is in find expression
-            try:
-                if self.find_expression:
+            if self.find_expression:
+                # Eg: [ find name=foo ]
+                if natural_key in self.find_expression.args:
                     return natural_key, self.find_expression.args[natural_key]
-            except KeyError:
-                pass
+
+                # Eg [ find where comment~ID:foo ]
+                args = self.find_expression.args
+                if (
+                    args[0].key == "where"
+                    and args[1].key == "comment"
+                    and args[1].comparator == "~"
+                    and str(args[1].value).startswith("ID:")
+                ):
+                    return "comment-id", str(args[1].value).split(":", 1)[1]
 
             # ID is positional arg
             if self.args and self.args[0].is_positional:
