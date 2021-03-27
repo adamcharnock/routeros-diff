@@ -55,16 +55,16 @@ class Section:
         s = s.strip()
         assert s.startswith("/"), "Was not passed a section block"
 
-        # Remove escaped new lines where the new line starts with a \_
-        # (\_ should be interpreted as space)
-        s = re.sub(r" *\\\n *\\_", " ", s)
-        # Remove escaped new lines where a key=value pair has been split by a new line
-        s = re.sub(r"= *\\\n *", "=", s)
-        # Remove escaped new lines
-        s = re.sub(r" *\\\n *", " ", s)
-        s = s.rstrip("\\")
+        # Remove any empty lines that only contain an escape
+        s = re.sub(r"\n *\\ *\n *", "\n", s)
 
-        lines = s.split("\n")
+        # Remove any trailing escapes
+        while s.endswith("\\"):
+            s = s[:-1]
+
+        # Split on any new line which is not preceded by a \
+        lines = re.split(r"(?<!\\)\n", s)
+
         # Remove blank lines and comments
         lines = [
             l.strip() for l in lines if l.strip() and not l.strip().startswith("#")

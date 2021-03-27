@@ -87,10 +87,13 @@ class Expression:
         """
         settings = settings or Settings()
 
+        # Remove escaped new lines where a key=value pair has been split by a new line
+        s = re.sub(r"= *\\\n *", "=", s)
+
         # Sanity check
         assert s.count("[") <= 1, f"Too many sub-expressions, cannot parse: {s}"
 
-        # Regex matching for find expressions (usingn a regex isn't ideal, but it works)
+        # Regex matching for find expressions (using a regex isn't ideal, but it works)
         find_expression_ = re.search(r"\[\s*(find.*?)\]", s)
         if find_expression_:
             find_expression_ = find_expression_.group(1).strip()
@@ -107,8 +110,8 @@ class Expression:
         except ValueError:
             raise ValueError(f"Error parsing line: {s}")
 
-        # Parse the args
-        args = [Arg.parse(arg) for arg in args]
+        # Parse the args (and drop out new lines)
+        args = [Arg.parse(arg) for arg in args if arg != "\n"]
 
         # And return our new Expression
         return Expression(

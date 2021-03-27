@@ -43,7 +43,7 @@ def test_config():
     assert len(config.sections) == 17
 
 
-def test_line_continuation():
+def test_line_continuation_simple():
     config = parser.RouterOSConfig.parse(
         "/foo\n" 
         "add foo=bar \\\n" 
@@ -64,8 +64,8 @@ def test_line_continuation_within_key_value_pair():
 def test_line_continuation_on_blank_line():
     config = parser.RouterOSConfig.parse(
         "/foo\n" 
-        "\\\n"
-        "add foo=a"
+        "    \\\n"
+        "    add foo=a"
     )
     assert len(config.sections) == 1
     assert str(config.sections[0]) == "/foo\nadd foo=a\n"
@@ -74,14 +74,23 @@ def test_line_continuation_on_blank_line():
 def test_line_continuation_before_blank_line():
     config = parser.RouterOSConfig.parse(
         "/foo\n" 
-        "add foo=a"
-        "\\\n\n"
+        "add foo=a\\\n\n"
     )
     assert len(config.sections) == 1
     assert str(config.sections[0]) == "/foo\nadd foo=a\n"
 
 
-def test_line_before_space_char():
+def test_line_break_in_string_normal():
+    config = parser.RouterOSConfig.parse(
+        '/ip route\n'
+        'add action=src-nat chain=cgnat-100.65.1.0/30 comment="Customer Zoho on plan FA\\\n'
+        '    ST [ ID:e509e0a2-73f9-4fb8-94d3-7a640dd033a7-tcp ]"'
+    )
+    assert len(config.sections) == 1
+    assert "Customer Zoho on plan FAST [ ID:" in str(config.sections[0])
+
+
+def test_line_break_in_string_normal_before_space_char():
     config = parser.RouterOSConfig.parse(
         '/ip route\n'
         'add comment="Fallback static route for ensuring access to management network [\\\n'

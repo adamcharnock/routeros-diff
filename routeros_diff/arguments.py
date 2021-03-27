@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Union, List, TYPE_CHECKING, Optional
 
 from routeros_diff.settings import Settings
-from routeros_diff.utilities import quote
+from routeros_diff.utilities import quote, unescape_string
 from routeros_diff.exceptions import CannotDiff
 
 if TYPE_CHECKING:
@@ -47,7 +47,7 @@ class AbstractArgValue:
         return str(self)
 
 
-@dataclass(eq=False)
+@dataclass(eq=False, init=False)
 class ArgValue(AbstractArgValue):
     """Represent a single standard value
 
@@ -59,6 +59,9 @@ class ArgValue(AbstractArgValue):
     """
 
     value: str
+
+    def __init__(self, value: str):
+        self.value = unescape_string(value)
 
     def quote(self) -> str:
         return quote(self.value)
