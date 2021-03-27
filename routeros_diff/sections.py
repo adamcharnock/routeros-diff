@@ -1,3 +1,4 @@
+import itertools
 import re
 from dataclasses import dataclass, replace
 from typing import List, Optional
@@ -183,10 +184,17 @@ class Section:
                     )
 
                     new_expression = self.expressions[new_expression_index]
-                    try:
-                        next_expression = self.expressions[new_expression_index + 1]
-                    except IndexError:
-                        next_expression = None
+
+                    # Find the next expression which also appears in the old section
+                    next_expression = None
+                    for expression in self.expressions[new_expression_index + 1 :]:
+                        try:
+                            _, natural_id = expression.natural_key_and_id
+                            next_expression = old[natural_id]
+                            # We will now place our new statement before that expression
+                            break
+                        except KeyError:
+                            pass
 
                     # Update with place-before value if next_expression is available.
                     # Otherwise this is the last expression in the list, so just add
