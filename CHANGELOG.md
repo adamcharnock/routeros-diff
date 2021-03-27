@@ -1,5 +1,9 @@
 # RouterOS Diff Changelog
 
+## 0.5.2
+
+* Improvement: Escaping is now more robust
+
 ## 0.5.1
 
 * Bug: Further improved implementation and testing of order-preserving logic
