@@ -1,5 +1,9 @@
 # RouterOS Diff Changelog
 
+## 0.5.0
+
+* Bug: Improved implementation and testing of order-preserving logic
+
 ## 0.4.0
 
 * Bug: Fixing omitted settings parameter. Also making settings parameters required, to catch this issue sooner
