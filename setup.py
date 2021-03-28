@@ -23,7 +23,7 @@ if os.path.exists(readme_path):
 setup(
     long_description=readme,
     name="routeros-diff",
-    version="0.5.2",
+    version="0.5.3",
     description="Tools for parsing & diffing RouterOS configuration files. Can produce config file patches.",
     python_requires="==3.*,>=3.6.0",
     project_urls={"repository": "https://github.com/gardunha/routeros-diff"},

@@ -1,5 +1,10 @@
 # RouterOS Diff Changelog
 
+## 0.5.3
+
+* Improvement: Adding `/ip dhcp-server lease` to Settings.natural_keys
+* Bug: Fixing error in improved natural ID parsing
+
 ## 0.5.2
 
 * Improvement: Escaping is now more robust
