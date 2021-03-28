@@ -226,7 +226,8 @@ class Expression:
                 # Eg [ find where comment~ID:foo ]
                 args = self.find_expression.args
                 if (
-                    args[0].key == "where"
+                    len(args) >= 2
+                    and args[0].key == "where"
                     and args[1].key == "comment"
                     and args[1].comparator == "~"
                     and str(args[1].value).startswith("ID:")
