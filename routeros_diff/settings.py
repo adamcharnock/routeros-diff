@@ -51,6 +51,7 @@ class Settings:
         "/routing ospf-v3 network": "network",
         "/mpls ldp interface": "interface",
         "/ip dhcp-server network": "address",
+        "/ip dhcp-server lease": "mac-address",
     }
 
     # Don't perform deletions in these sections
