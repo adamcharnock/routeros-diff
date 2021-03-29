@@ -52,6 +52,9 @@ class Settings:
         "/mpls ldp interface": "interface",
         "/ip dhcp-server network": "address",
         "/ip dhcp-server lease": "mac-address",
+        "/ipv6 nd": "interface",
+        "/ipv6 nd prefix": "interface",
+        "/ipv6 dhcp-client": "interface",
     }
 
     # Don't perform deletions in these sections
