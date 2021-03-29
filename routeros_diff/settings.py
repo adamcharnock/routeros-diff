@@ -43,6 +43,7 @@ class Settings:
     # (and only if the 'name' value is available)
     natural_keys = {
         "/interface ethernet": "default-name",
+        "/interface bridge port": "interface",
         "/ip address": "address",
         "/ipv6 address": "address",
         "/routing ospf interface": "interface",
