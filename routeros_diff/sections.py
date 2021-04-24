@@ -172,16 +172,19 @@ class Section:
             # modifications.
             diff = self._diff_by_value(old, old_verbose)
 
-        # Handle ordering if we need to
+        # Handle ordering if we need to, and if we have changes
         if self.settings.is_expression_order_important(self.path) and diff.expressions:
-            # Order is important here, and we have changes
             if self.uses_natural_ids and old.uses_natural_ids:
                 # We can ID each record, so apply the correct ordering
-                for diff_expression in diff.expressions:
+                for i, diff_expression in enumerate(diff.expressions):
                     natural_key, natural_id = diff_expression.natural_key_and_id
-                    new_expression_index = self.expression_index_for_natural_key(
-                        natural_key, natural_id
-                    )
+                    try:
+                        new_expression_index = self.expression_index_for_natural_key(
+                            natural_key, natural_id
+                        )
+                    except KeyError:
+                        diff.expressions[i] = diff_expression.as_delete()
+                        break
 
                     new_expression = self.expressions[new_expression_index]
 

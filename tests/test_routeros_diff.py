@@ -562,6 +562,7 @@ def test_diff_section_order_important_with_ids_insert_at_middle():
     assert str(diffed.expressions[0]) == 'add value=a comment="[ ID:a ]" place-before=[ find where comment~"ID:y" ]'
     assert str(diffed.expressions[1]) == 'add value=b comment="[ ID:b ]" place-before=[ find where comment~"ID:y" ]'
 
+
 def test_diff_section_order_important_with_ids_add_to_empty_section():
     old = routeros_diff.sections.Section.parse(
         "/ip firewall nat\n"
@@ -576,6 +577,22 @@ def test_diff_section_order_important_with_ids_add_to_empty_section():
     assert len(diffed.expressions) == 2
     assert str(diffed.expressions[0]) == 'add moo=sheep comment="[ ID:2 ]"'
     assert str(diffed.expressions[1]) == 'add moo=duck comment="[ ID:3 ]"'
+
+
+def test_diff_section_order_important_deletion():
+    old = routeros_diff.sections.Section.parse(
+        "/ip firewall nat\n"
+        'add moo=sheep comment="[ ID:2 ]"\n'
+        'add moo=duck comment="[ ID:3 ]"\n'
+    )
+    new = routeros_diff.sections.Section.parse(
+        "/ip firewall nat\n" 
+        'add moo=duck comment="[ ID:3 ]"\n'
+    )
+
+    diffed = new.diff(old)
+    assert len(diffed.expressions) == 1
+    assert str(diffed.expressions[0]) == 'remove [ find where comment~"ID:2" ]'
 
 
 def test_diff_section_ethernet_names_reset():
