@@ -90,6 +90,10 @@ class Expression:
         # Remove escaped new lines where a key=value pair has been split by a new line
         s = re.sub(r"= *\\\n *", "=", s)
 
+        # Add whitespace around escaped new lines to ensure Python's shlex interprets
+        # them as escaped new lines, and not as values containing a new line character
+        s = s.replace("\\\n", " \\\n ")
+
         # Sanity check
         assert s.count("[") <= 1, f"Too many sub-expressions, cannot parse: {s}"
 

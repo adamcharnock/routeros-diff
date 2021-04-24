@@ -80,6 +80,15 @@ def test_line_continuation_before_blank_line():
     assert str(config.sections[0]) == "/foo\nadd foo=a\n"
 
 
+def test_line_continuation_after_quotes():
+    config = parser.RouterOSConfig.parse(
+        "/foo\n" 
+        'add foo=Test\\\nmoo=Test\n\n'
+    )
+    assert len(config.sections) == 1
+    assert str(config.sections[0]) == '/foo\nadd foo=Test moo=Test\n'
+
+
 def test_line_break_in_string_normal():
     config = parser.RouterOSConfig.parse(
         '/ip route\n'
