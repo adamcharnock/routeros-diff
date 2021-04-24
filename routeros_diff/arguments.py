@@ -60,11 +60,12 @@ class ArgValue(AbstractArgValue):
 
     value: str
 
-    def __init__(self, value: str):
+    def __init__(self, value: str, force_quote: bool = False):
         self.value = unescape_string(value)
+        self.force_quote = force_quote
 
     def quote(self) -> str:
-        return quote(self.value)
+        return quote(self.value, force=self.force_quote)
 
     def __html__(self):
         return f'<span class="ros-v">{self.quote()}</span>'
@@ -129,7 +130,9 @@ class Arg:
 
         # Normalise our value into some kind of AbstractArgValue
         if isinstance(value, str):
-            self.value = ArgValue(value)
+            # Always quote regex expressions, otherwise RouterOS tends to ignore them
+            force_quote = comparator == "~"
+            self.value = ArgValue(value, force_quote=force_quote)
         elif isinstance(value, Expression):
             self.value = ExpressionArgValue(value)
         elif value is None:

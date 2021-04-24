@@ -323,7 +323,7 @@ def test_diff_section_modify_with_comment_natural_key():
 
     diffed = new.diff(old)
     assert len(diffed.expressions) == 1
-    assert str(diffed.expressions[0]) == 'set [ find where comment~ID:123 ] router-id=10.127.0.99'
+    assert str(diffed.expressions[0]) == 'set [ find where comment~"ID:123" ] router-id=10.127.0.99'
 
 
 def test_diff_section_modify_with_comment_no_key():
@@ -379,7 +379,7 @@ def test_diff_section_modify_with_old_comment_natural_key():
 
     diffed = new.diff(old)
     assert len(diffed.expressions) == 2
-    assert str(diffed.expressions[0]) == 'remove [ find where comment~ID:123 ]'
+    assert str(diffed.expressions[0]) == 'remove [ find where comment~"ID:123" ]'
     assert str(diffed.expressions[1]) == 'add name=foo router-id=10.127.0.99'
 
 
@@ -490,8 +490,8 @@ def test_diff_section_order_important_with_ids_modify_same_order():
 
     diffed = new.diff(old)
     assert len(diffed.expressions) == 2
-    assert str(diffed.expressions[0]) == "set [ find where comment~ID:1 ] moo=cow"
-    assert str(diffed.expressions[1]) == "set [ find where comment~ID:2 ] moo=new-value"
+    assert str(diffed.expressions[0]) == 'set [ find where comment~"ID:1" ] moo=cow'
+    assert str(diffed.expressions[1]) == 'set [ find where comment~"ID:2" ] moo=new-value'
 
 
 def test_diff_section_order_important_with_ids_insert_at_start():
@@ -510,8 +510,8 @@ def test_diff_section_order_important_with_ids_insert_at_start():
 
     diffed = new.diff(old)
     assert len(diffed.expressions) == 2
-    assert str(diffed.expressions[0]) == 'add value=a comment="[ ID:a ]" place-before=[ find where comment~ID:x ]'
-    assert str(diffed.expressions[1]) == 'add value=b comment="[ ID:b ]" place-before=[ find where comment~ID:x ]'
+    assert str(diffed.expressions[0]) == 'add value=a comment="[ ID:a ]" place-before=[ find where comment~"ID:x" ]'
+    assert str(diffed.expressions[1]) == 'add value=b comment="[ ID:b ]" place-before=[ find where comment~"ID:x" ]'
 
 
 def test_diff_section_order_important_with_ids_insert_at_end():
@@ -550,8 +550,8 @@ def test_diff_section_order_important_with_ids_insert_at_middle():
 
     diffed = new.diff(old)
     assert len(diffed.expressions) == 2
-    assert str(diffed.expressions[0]) == 'add value=a comment="[ ID:a ]" place-before=[ find where comment~ID:y ]'
-    assert str(diffed.expressions[1]) == 'add value=b comment="[ ID:b ]" place-before=[ find where comment~ID:y ]'
+    assert str(diffed.expressions[0]) == 'add value=a comment="[ ID:a ]" place-before=[ find where comment~"ID:y" ]'
+    assert str(diffed.expressions[1]) == 'add value=b comment="[ ID:b ]" place-before=[ find where comment~"ID:y" ]'
 
 def test_diff_section_order_important_with_ids_add_to_empty_section():
     old = routeros_diff.sections.Section.parse(
@@ -611,7 +611,7 @@ def test_diff_section_firewall():
     )
 
     diffed = new.diff(old)
-    assert str(diffed.expressions[0]) == 'add chain=b comment="[ ID:2 ]" place-before=[ find where comment~ID:3 ]'
+    assert str(diffed.expressions[0]) == 'add chain=b comment="[ ID:2 ]" place-before=[ find where comment~"ID:3" ]'
 
 
 def test_diff_section_named_default_with_comment_id():
@@ -625,7 +625,7 @@ def test_diff_section_named_default_with_comment_id():
     )
 
     diffed = new.diff(old)
-    assert str(diffed.expressions[0]) == 'set [ find where comment~ID:main ] client-to-client-reflection=yes'
+    assert str(diffed.expressions[0]) == 'set [ find where comment~"ID:main" ] client-to-client-reflection=yes'
 
 
 def test_diff_section_named_default_with_comment_id_with_verbose():

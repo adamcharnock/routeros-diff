@@ -25,7 +25,7 @@ def find_expression(key, value, settings, *args):
         )
 
 
-def quote(s: str):
+def quote(s: str, force=False):
     """Quote a value for use in a RouterOS expression"""
     if not s:
         return '""'
@@ -35,7 +35,7 @@ def quote(s: str):
     ), """Found value containing a double quote ("). We cannot quote this. Remove the char from the string"""
     specials = ["\\", " ", "$", "(", ")", "[", "]", "{", "}", ";", "=", "`", "~", "/"]
 
-    if any(c in s for c in specials):
+    if force or any(c in s for c in specials):
         return f'"{s}"'
     else:
         return s
