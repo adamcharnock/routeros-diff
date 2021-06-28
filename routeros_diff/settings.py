@@ -59,7 +59,11 @@ class Settings:
     }
 
     # Don't perform deletions in these sections
-    no_deletions = {"/interface ethernet", "/interface wireless security-profiles"}
+    no_deletions = {
+        "/interface ethernet",
+        "/interface wireless security-profiles",
+        "/interface ethernet switch port",
+    }
 
     # Don't perform creations in these sections
     no_creations = {
