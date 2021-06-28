@@ -115,7 +115,11 @@ class Expression:
             raise ValueError(f"Error parsing line: {s}")
 
         # Parse the args (and drop out new lines)
-        args = [Arg.parse(arg) for arg in args if arg != "\n"]
+        args = [
+            Arg.parse(arg, section_path=section_path, settings=settings)
+            for arg in args
+            if arg != "\n"
+        ]
 
         # And return our new Expression
         return Expression(
@@ -246,7 +250,7 @@ class Expression:
 
         def _post_process(natural_key, natural_id):
             if self.section_path == "/ip address" and natural_key == "address":
-                # Normalise addresses to contain the /32 prefix as this is required
+                # Normalise IPv4 addresses to contain the /32 prefix as this is required
                 # from find expressions to work
                 if "/" not in natural_id and ip_address(natural_id).version == 4:
                     natural_id = f"{natural_id}/32"

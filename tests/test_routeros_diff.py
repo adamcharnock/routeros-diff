@@ -211,7 +211,6 @@ def test_diff_expression_source_uses_find_different_names():
         str(new.diff(old)[0])
     assert "mismatched natural IDs" in str(cm.value)
 
-
 def test_diff_section_modify_with_natural_key():
     old = routeros_diff.sections.Section.parse(
         "/routing ospf instance\n" 
@@ -694,6 +693,21 @@ def test_diff_section_dont_add_ethernet_interfaces():
     new = routeros_diff.sections.Section.parse(
         "/interface ethernet\n"
         "set [ find default-name=ether1 ] name=ether1\n"
+    )
+
+    diffed = new.diff(old)
+    assert len(diffed.expressions) == 0
+
+
+def test_diff_section_ipv6_address_default_prefix_size():
+    # RouterOS doesn't show the prefix size for /64 IPv6 addresses
+    old = routeros_diff.sections.Section.parse(
+        "/ipv6 address\n"
+        "add address=2002:db8:a1c0:0:2::1",
+    )
+    new = routeros_diff.sections.Section.parse(
+        "/ipv6 address\n"
+        "add address=2002:db8:a1c0:0:2::1/64",
     )
 
     diffed = new.diff(old)

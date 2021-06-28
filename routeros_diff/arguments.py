@@ -152,7 +152,7 @@ class Arg:
             return f"{self.key}{self.comparator}{self.value.quote()}"
 
     @staticmethod
-    def parse(s: str):
+    def parse(s: str, section_path: str, settings: Settings = None):
         """Parse an argument string
 
         Can be either key/value, or positional
@@ -162,6 +162,11 @@ class Arg:
         else:
             key = s
             value = None
+
+        # IPv6 addresses need normalising as RouterOS omits any /64 prefix
+        if section_path == "/ipv6 address" and key == "address":
+            if "/" not in value:
+                value = f"{value}/64"
 
         assert (
             key != "["
